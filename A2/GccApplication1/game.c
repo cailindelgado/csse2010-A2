@@ -59,7 +59,7 @@ void play_note(uint8_t lane) // button lane, normally aligned
 	//    advance_note when a note disappears from the screen
 
 	green_check = lane;
-		
+	
 	for (uint8_t col = 11; col < MATRIX_NUM_COLUMNS; col++) {
 	
 		uint8_t future = MATRIX_NUM_COLUMNS - 1 - col; //this is the next position that the note will be in
@@ -146,13 +146,30 @@ void advance_note(void)
 		// iterate over the four paths
 		for (uint8_t lane=0; lane<4; lane++)
 		{
+			
+			//check if there's a note in the specific path
+			if (track[index] & (1<<lane)) {
+				
+				//check if theres a note in the led matrix section
+				if ((green_check == lane) & ((col >= 11) & (col <= 15))) {
+					//if true set pixels to green
+					ledmatrix_update_pixel(col, 2*lane, COLOUR_GREEN);
+					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_GREEN);
+				} else {
+					ledmatrix_update_pixel(col, 2*lane, COLOUR_RED);
+					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_RED);							
+				} 
+			}
+			
+			
+			/*
 			// check if there's a note in the specific path	
 			if (track[index] & (1<<lane)) {
 				// if so, colour the two pixels red
 				ledmatrix_update_pixel(col, 2*lane, COLOUR_RED);
 				ledmatrix_update_pixel(col, 2*lane+1, COLOUR_RED);
 			}
-		}
+		*/}
 	}
 }
 
