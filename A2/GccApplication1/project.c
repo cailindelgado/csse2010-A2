@@ -179,9 +179,20 @@ void play_game(void)
 		// in `buttons.c`.
 		btn = button_pushed();
 		
-		if (btn == BUTTON0_PUSHED)
-		{
+		if (btn == BUTTON0_PUSHED) {
 			// If button 0 play the lowest note (right lane)
+			play_note(3); //bitwise lane is the left-most lane, button lane is the rightmost lane
+		
+		} else if (btn == BUTTON1_PUSHED) {
+			//If button 1 is pushed play the second lowest note
+			play_note(2);
+		
+		} else if (btn == BUTTON2_PUSHED) {
+			//If button 2 is pushed play the second highest note
+			play_note(1); 
+			
+		} else if (btn == BUTTON3_PUSHED) {
+			//If button 3 is pushed play the highest note
 			play_note(0);
 		}
 		

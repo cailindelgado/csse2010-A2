@@ -33,17 +33,18 @@ static const uint8_t track[TRACK_LENGTH] = {0x00,
 	0x01, 0x10, 0x10, 0x10, 0x00, 0x00, 0x00, 0x00};
 
 uint16_t beat;
+uint8_t green_check = 4; // 4 is a place holder value which will be changed when the buttons are first pressed
 
-// Initialise the game by resetting the grid and beat
+// Initialize the game by resetting the grid and beat
 void initialise_game(void)
 {
-	// initialise the display we are using.
+	// initialize the display we are using.
 	default_grid();
 	beat = 0;
 }
 
 // Play a note in the given lane
-void play_note(uint8_t lane)
+void play_note(uint8_t lane) // button lane, normally aligned
 {
 	// YOUR CODE HERE
 	// possible steps:
@@ -56,6 +57,24 @@ void play_note(uint8_t lane)
 	//    instead of COLOUR_RED for ledmatrix_update_pixel if required
 	// e) depending on your implementation, clear the variable in
 	//    advance_note when a note disappears from the screen
+
+	green_check = lane;
+		
+	for (uint8_t col = 11; col < MATRIX_NUM_COLUMNS; col++) {
+	
+		uint8_t future = MATRIX_NUM_COLUMNS - 1 - col; //this is the next position that the note will be in
+		uint8_t index = (future + beat) / 5;	//this is the note??
+		
+		if ((future+beat) % 5) {
+			continue;
+		}
+		if (track[index] & (1<<lane))
+		{
+			// if so, colour the two pixels green
+			ledmatrix_update_pixel(col, 2*lane, COLOUR_GREEN);
+			ledmatrix_update_pixel(col, 2*lane+1, COLOUR_GREEN);
+		}
+	}
 }
 
 // Advance the notes one row down the display
@@ -127,9 +146,8 @@ void advance_note(void)
 		// iterate over the four paths
 		for (uint8_t lane=0; lane<4; lane++)
 		{
-			// check if there's a note in the specific path
-			if (track[index] & (1<<lane))
-			{
+			// check if there's a note in the specific path	
+			if (track[index] & (1<<lane)) {
 				// if so, colour the two pixels red
 				ledmatrix_update_pixel(col, 2*lane, COLOUR_RED);
 				ledmatrix_update_pixel(col, 2*lane+1, COLOUR_RED);
