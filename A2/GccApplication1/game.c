@@ -33,7 +33,7 @@ static const uint8_t track[TRACK_LENGTH] = {0x00,
 	0x01, 0x10, 0x10, 0x10, 0x00, 0x00, 0x00, 0x00};
 
 uint16_t beat;
-uint8_t green_check = 4; // 4 is a place holder value which will be changed when the buttons are first pressed
+uint8_t green_check; 
 
 // Initialize the game by resetting the grid and beat
 void initialise_game(void)
@@ -58,7 +58,7 @@ void play_note(uint8_t lane) // button lane, normally aligned
 	// e) depending on your implementation, clear the variable in
 	//    advance_note when a note disappears from the screen
 
-	green_check = lane;
+	
 	
 	for (uint8_t col = 11; col < MATRIX_NUM_COLUMNS; col++) {
 	
@@ -70,6 +70,8 @@ void play_note(uint8_t lane) // button lane, normally aligned
 		}
 		if (track[index] & (1<<lane))
 		{
+			green_check = lane;
+			
 			// if so, colour the two pixels green
 			ledmatrix_update_pixel(col, 2*lane, COLOUR_GREEN);
 			ledmatrix_update_pixel(col, 2*lane+1, COLOUR_GREEN);
@@ -87,6 +89,7 @@ void advance_note(void)
 		uint8_t index = (future + beat) / 5;
 		if (index >= TRACK_LENGTH)
 		{
+			//green_check = 4; //change green_check to be a lane outside scope of game
 			break;
 		}
 		if ((future+beat) % 5)
@@ -155,10 +158,14 @@ void advance_note(void)
 					//if true set pixels to green
 					ledmatrix_update_pixel(col, 2*lane, COLOUR_GREEN);
 					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_GREEN);
+					
 				} else {
 					ledmatrix_update_pixel(col, 2*lane, COLOUR_RED);
 					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_RED);							
-				} 
+				}
+				if (col >= 15) {
+					green_check = 4;
+				}
 			}
 			
 			
@@ -168,8 +175,9 @@ void advance_note(void)
 				// if so, colour the two pixels red
 				ledmatrix_update_pixel(col, 2*lane, COLOUR_RED);
 				ledmatrix_update_pixel(col, 2*lane+1, COLOUR_RED);
-			}
-		*/}
+			}	
+			*/	
+		}
 	}
 }
 

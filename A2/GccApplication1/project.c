@@ -128,7 +128,8 @@ void start_screen(void)
 		if (serial_input == 's' || serial_input == 'S')
 		{
 			break;
-		}
+		} 
+		
 		// Next check for any button presses
 		int8_t btn = button_pushed();
 		if (btn != NO_BUTTON_PUSHED)
@@ -178,6 +179,7 @@ void play_game(void)
 		// Checkout the function comment in `buttons.h` and the implementation
 		// in `buttons.c`.
 		btn = button_pushed();
+		char keyboard_input = -1;
 		
 		if (btn == BUTTON0_PUSHED) {
 			// If button 0 play the lowest note (right lane)
@@ -194,8 +196,27 @@ void play_game(void)
 		} else if (btn == BUTTON3_PUSHED) {
 			//If button 3 is pushed play the highest note
 			play_note(0);
+		} 
+		
+		if (serial_input_available()) {
+			keyboard_input = fgetc(stdin);
 		}
 		
+		//if the keyboard input is 'a', 's', 'd', 'f' then play the appropriate note
+		if (keyboard_input == 'a' || keyboard_input == 'A') {
+			play_note(0);
+			
+		} else if (keyboard_input == 's' || keyboard_input == 'S') {
+			play_note(1);
+		
+		} else if (keyboard_input == 'd' || keyboard_input == 'D') {
+			play_note(2);
+	
+		} else if (keyboard_input == 'f' || keyboard_input == 'F') {
+			play_note(3);
+			
+		} 
+				
 		current_time = get_current_time();
 		if (current_time >= last_advance_time + game_speed/5)
 		{
