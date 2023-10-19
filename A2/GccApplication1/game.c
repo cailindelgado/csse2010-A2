@@ -26,14 +26,15 @@ static const uint8_t track[TRACK_LENGTH] = {0x00,
 	0x00, 0x00, 0x08, 0x08, 0x08, 0x80, 0x04, 0x02,
 	0x04, 0x40, 0x02, 0x08, 0x80, 0x00, 0x02, 0x01,
 	0x04, 0x40, 0x08, 0x80, 0x04, 0x02, 0x20, 0x01,
-	0x10, 0x10, 0x12, 0x20, 0x00, 0x00, 0x02, 0x20,
+	0x10, 0x10, 0x12 , 0x20, 0x00, 0x00, 0x02, 0x20,
 	0x04, 0x40, 0x08, 0x04, 0x40, 0x40, 0x02, 0x20,
 	0x04, 0x40, 0x08, 0x04, 0x40, 0x40, 0x02, 0x20,
 	0x04, 0x40, 0x08, 0x04, 0x40, 0x40, 0x02, 0x20,
-	0x01, 0x10, 0x10, 0x10, 0x00, 0x00, 0x00, 0x00};
+0x01, 0x10, 0x10, 0x10, 0x00, 0x00, 0x00, 0x00};
 
 uint16_t beat;
 uint8_t green_check; 
+uint8_t game_over = 0;
 
 // Initialize the game by resetting the grid and beat
 void initialise_game(void)
@@ -44,28 +45,15 @@ void initialise_game(void)
 }
 
 // Play a note in the given lane
-void play_note(uint8_t lane) // button lane, normally aligned
-{
-	// YOUR CODE HERE
-	// possible steps:
-	// a) check if there is a note in the scoring area of the given lane -
-	//    look at advance_note below for a hint to the logic
-	// b) if there is, immediately turn those notes green
-	// c) set up a variable to remember if notes should be green,
-	//    and trigger it simultaneously with b)
-	// d) in advance_note below, poll that variable, and choose COLOUR_GREEN
-	//    instead of COLOUR_RED for ledmatrix_update_pixel if required
-	// e) depending on your implementation, clear the variable in
-	//    advance_note when a note disappears from the screen
+void play_note(uint8_t lane)
+{	
 
-	
-	
 	for (uint8_t col = 11; col < MATRIX_NUM_COLUMNS; col++) {
 	
 		uint8_t future = MATRIX_NUM_COLUMNS - 1 - col; //this is the next position that the note will be in
 		uint8_t index = (future + beat) / 5;	//this is the note??
 		
-		if ((future+beat) % 5) {
+		if ((future + beat) % 5) {
 			continue;
 		}
 		if (track[index] & (1<<lane))
@@ -75,8 +63,25 @@ void play_note(uint8_t lane) // button lane, normally aligned
 			// if so, colour the two pixels green
 			ledmatrix_update_pixel(col, 2*lane, COLOUR_GREEN);
 			ledmatrix_update_pixel(col, 2*lane+1, COLOUR_GREEN);
+			
+			//if the note is in the two specified lanes then award the appropriate amount of points
+			if (col == 11 || col == 15) {
+				points++;
+				
+			} else if (col == 12 || col == 14) {
+				points + 2;
+				
+			} else if (col == 13) {
+				points + 3;
+			} else {
+				--points;
+			}
 		}
+		
 	}
+	
+	
+	
 }
 
 // Advance the notes one row down the display
@@ -87,9 +92,19 @@ void advance_note(void)
 	{
 		uint8_t future = MATRIX_NUM_COLUMNS - 1 - col;
 		uint8_t index = (future + beat) / 5;
+		uint8_t ghost_start_index = ((MATRIX_NUM_COLUMNS - 1) + beat)/5;
+		uint8_t ghost_index = ghost_start_index +1;
+		for (ghost_index; ghost_index < TRACK_LENGTH; ghost_index++) {
+			if (track[ghost_index] & 0x0F) {
+				break;
+			}
+		}
+		uint8_t ghost_note = track[ghost_index];
+		
 		if (index >= TRACK_LENGTH)
 		{
-			//green_check = 4; //change green_check to be a lane outside scope of game
+			//Game Over
+			game_over = 1;
 			break;
 		}
 		if ((future+beat) % 5)
@@ -98,6 +113,21 @@ void advance_note(void)
 		}
 		for (uint8_t lane = 0; lane < 4; lane++)
 		{
+			//check if the next note is in the appropriate lane
+			if ((ghost_note == 0x01) & (lane == 0)) {
+				ledmatrix_update_pixel(0, 2*lane, COLOUR_DARK_RED);
+				ledmatrix_update_pixel(0, 2*lane + 1, COLOUR_DARK_RED);
+			} else if ((ghost_note == 0x02) & (lane == 1)) {
+				ledmatrix_update_pixel(0, 2*lane, COLOUR_DARK_RED);
+				ledmatrix_update_pixel(0, 2*lane + 1, COLOUR_DARK_RED);
+			} else if ((ghost_note == 0x04) & (lane == 2)) {
+				ledmatrix_update_pixel(0, 2*lane, COLOUR_DARK_RED);
+				ledmatrix_update_pixel(0, 2*lane + 1, COLOUR_DARK_RED);
+			} else if ((ghost_note == 0x08) & (lane == 3)) {
+				ledmatrix_update_pixel(0, 2*lane, COLOUR_DARK_RED);
+				ledmatrix_update_pixel(0, 2*lane + 1, COLOUR_DARK_RED);
+			}
+				
 			if (track[index] & (1<<lane))
 			{
 				PixelColour colour;
@@ -140,16 +170,22 @@ void advance_note(void)
 		
 		// index of which note in the track to play
 		uint8_t index = (future+beat)/5;
+		
+		uint8_t ghost_index = ((MATRIX_NUM_COLUMNS - 1) + beat)/5;
+		//next note in track that is coming
+		uint8_t ghost_note = track[ghost_index];
+		
 		// if the index is beyond the end of the track,
 		// no note can be drawn
-		if (index >= TRACK_LENGTH)
+		if (index >= TRACK_LENGTH || (index + 1) >= TRACK_LENGTH)
 		{
 			continue;
 		}
+				
 		// iterate over the four paths
 		for (uint8_t lane=0; lane<4; lane++)
-		{
-			
+		{									
+				
 			//check if there's a note in the specific path
 			if (track[index] & (1<<lane)) {
 				
@@ -158,25 +194,27 @@ void advance_note(void)
 					//if true set pixels to green
 					ledmatrix_update_pixel(col, 2*lane, COLOUR_GREEN);
 					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_GREEN);
+				
+				} else if (ghost_note != track[index]) {
+					
+					ledmatrix_update_pixel(0, 2*lane, COLOUR_BLACK);
+					ledmatrix_update_pixel(0, 2*lane+1, COLOUR_BLACK);
+
+					ledmatrix_update_pixel(col, 2*lane, COLOUR_RED);
+					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_RED);
 					
 				} else {
 					ledmatrix_update_pixel(col, 2*lane, COLOUR_RED);
 					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_RED);							
-				}
+					
+				} 
+				
+				//check if the current note goes off the screen
 				if (col >= 15) {
-					green_check = 4;
+					green_check = -1;
 				}
+								
 			}
-			
-			
-			/*
-			// check if there's a note in the specific path	
-			if (track[index] & (1<<lane)) {
-				// if so, colour the two pixels red
-				ledmatrix_update_pixel(col, 2*lane, COLOUR_RED);
-				ledmatrix_update_pixel(col, 2*lane+1, COLOUR_RED);
-			}	
-			*/	
 		}
 	}
 }
@@ -184,7 +222,11 @@ void advance_note(void)
 // Returns 1 if the game is over, 0 otherwise.
 uint8_t is_game_over(void)
 {
-	// YOUR CODE HERE
 	// Detect if the game is over i.e. if a player has won.
+	if (game_over) {
+		return 1;	
+	} else {
 	return 0;
+	
+	}
 }

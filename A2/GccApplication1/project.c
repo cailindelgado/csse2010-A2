@@ -34,6 +34,8 @@ void new_game(void);
 void play_game(void);
 void handle_game_over(void);
 
+char keyboard_input = -1;
+
 uint16_t game_speed;
 
 /////////////////////////////// main //////////////////////////////////
@@ -42,6 +44,8 @@ int main(void)
 	// Setup hardware and call backs. This will turn on 
 	// interrupts.
 	initialise_hardware();
+	
+	points = 0;
 	
 	// Show the splash screen message. Returns when display
 	// is complete.
@@ -153,7 +157,10 @@ void new_game(void)
 	// Clear the serial terminal
 	clear_terminal();
 	
-	// Initialise the game and display
+	//reset number of points player has
+	points = 0;
+	
+	// Initialize the game and display
 	initialise_game();
 	
 	// Clear a button push or serial input if any are waiting
@@ -179,43 +186,33 @@ void play_game(void)
 		// Checkout the function comment in `buttons.h` and the implementation
 		// in `buttons.c`.
 		btn = button_pushed();
-		char keyboard_input = -1;
-		
-		if (btn == BUTTON0_PUSHED) {
-			// If button 0 play the lowest note (right lane)
-			play_note(3); //bitwise lane is the left-most lane, button lane is the rightmost lane
-		
-		} else if (btn == BUTTON1_PUSHED) {
-			//If button 1 is pushed play the second lowest note
-			play_note(2);
-		
-		} else if (btn == BUTTON2_PUSHED) {
-			//If button 2 is pushed play the second highest note
-			play_note(1); 
-			
-		} else if (btn == BUTTON3_PUSHED) {
-			//If button 3 is pushed play the highest note
-			play_note(0);
-		} 
 		
 		if (serial_input_available()) {
 			keyboard_input = fgetc(stdin);
 		}
 		
-		//if the keyboard input is 'a', 's', 'd', 'f' then play the appropriate note
-		if (keyboard_input == 'a' || keyboard_input == 'A') {
-			play_note(0);
-			
-		} else if (keyboard_input == 's' || keyboard_input == 'S') {
-			play_note(1);
+		if ((btn == BUTTON0_PUSHED) || (keyboard_input == 'f' || keyboard_input == 'F')) {
+			// If button 0 play the lowest note (right lane)
+			play_note(3); //bitwise lane is the left-most lane, button lane is the rightmost lane
 		
-		} else if (keyboard_input == 'd' || keyboard_input == 'D') {
+		} else if ((btn == BUTTON1_PUSHED) || (keyboard_input == 'd' || keyboard_input == 'D')) {
+			//If button 1 is pushed play the second lowest note
 			play_note(2);
-	
-		} else if (keyboard_input == 'f' || keyboard_input == 'F') {
-			play_note(3);
+		
+		} else if ((btn == BUTTON2_PUSHED) || (keyboard_input == 's' || keyboard_input == 'S')) {
+			//If button 2 is pushed play the second highest note
+			play_note(1); 
 			
+		} else if ((btn == BUTTON3_PUSHED) || (keyboard_input == 'a' || keyboard_input == 'A')) {
+			//If button 3 is pushed play the highest note
+			play_note(0);
 		} 
+		
+		/*
+		if (keyboard_input == 'm' || keyboard_input == 'M') {
+			//run an interrupt to last until keyboard_input is run again	
+		}
+		*/
 				
 		current_time = get_current_time();
 		if (current_time >= last_advance_time + game_speed/5)
@@ -229,6 +226,7 @@ void play_game(void)
 		}
 	}
 	// We get here if the game is over.
+	handle_game_over();
 }
 
 void handle_game_over()
@@ -236,7 +234,14 @@ void handle_game_over()
 	move_terminal_cursor(10,14);
 	printf_P(PSTR("GAME OVER"));
 	move_terminal_cursor(10,15);
+	printf("Game Score: %d", points);
 	printf_P(PSTR("Press a button or 's'/'S' to start a new game"));
+	
+	//if (serial_input_available()) {
+	//	keyboard_input = fgetc(stdin);
+	//}
+	
+	//if (keyboard_input == 's' || keyboard_input == 'S') {}
 	
 	// Do nothing until a button is pushed. Hint: 's'/'S' should also start a
 	// new game
