@@ -34,8 +34,6 @@ void new_game(void);
 void play_game(void);
 void handle_game_over(void);
 
-char keyboard_input = -1;
-
 uint16_t game_speed;
 
 /////////////////////////////// main //////////////////////////////////
@@ -187,17 +185,19 @@ void play_game(void)
 		// in `buttons.c`.
 		btn = button_pushed();
 		
+		char keyboard_input = -1;
+		
 		if (serial_input_available()) {
 			keyboard_input = fgetc(stdin);
 		}
 		
 		if ((btn == BUTTON0_PUSHED) || (keyboard_input == 'f' || keyboard_input == 'F')) {
 			// If button 0 play the lowest note (right lane)
-			play_note(3); //bitwise lane is the left-most lane, button lane is the rightmost lane
+			play_note(3);
 		
 		} else if ((btn == BUTTON1_PUSHED) || (keyboard_input == 'd' || keyboard_input == 'D')) {
 			//If button 1 is pushed play the second lowest note
-			play_note(2);
+			play_note(2);		
 		
 		} else if ((btn == BUTTON2_PUSHED) || (keyboard_input == 's' || keyboard_input == 'S')) {
 			//If button 2 is pushed play the second highest note
@@ -206,7 +206,10 @@ void play_game(void)
 		} else if ((btn == BUTTON3_PUSHED) || (keyboard_input == 'a' || keyboard_input == 'A')) {
 			//If button 3 is pushed play the highest note
 			play_note(0);
+			
 		} 
+		
+		
 		
 		/*
 		if (keyboard_input == 'm' || keyboard_input == 'M') {
@@ -234,7 +237,7 @@ void handle_game_over()
 	move_terminal_cursor(10,14);
 	printf_P(PSTR("GAME OVER"));
 	move_terminal_cursor(10,15);
-	printf("Game Score: %d", points);
+	printf("Game Score: %d\n", points);
 	printf_P(PSTR("Press a button or 's'/'S' to start a new game"));
 	
 	//if (serial_input_available()) {

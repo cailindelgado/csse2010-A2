@@ -28,6 +28,6 @@ void advance_note(void);
 // Returns 1 if the game is over, 0 otherwise.
 uint8_t is_game_over(void);
 
-uint8_t points;
+int points;
 
 #endif

@@ -26,14 +26,14 @@ static const uint8_t track[TRACK_LENGTH] = {0x00,
 	0x00, 0x00, 0x08, 0x08, 0x08, 0x80, 0x04, 0x02,
 	0x04, 0x40, 0x02, 0x08, 0x80, 0x00, 0x02, 0x01,
 	0x04, 0x40, 0x08, 0x80, 0x04, 0x02, 0x20, 0x01,
-	0x10, 0x10, 0x12 , 0x20, 0x00, 0x00, 0x02, 0x20,
+	0x10, 0x10, 0x12, 0x20, 0x00, 0x00, 0x02, 0x20,
 	0x04, 0x40, 0x08, 0x04, 0x40, 0x40, 0x02, 0x20,
 	0x04, 0x40, 0x08, 0x04, 0x40, 0x40, 0x02, 0x20,
 	0x04, 0x40, 0x08, 0x04, 0x40, 0x40, 0x02, 0x20,
 0x01, 0x10, 0x10, 0x10, 0x00, 0x00, 0x00, 0x00};
 
 uint16_t beat;
-uint8_t green_check; 
+uint8_t green_check = - 1; 
 uint8_t game_over = 0;
 
 // Initialize the game by resetting the grid and beat
@@ -58,6 +58,14 @@ void play_note(uint8_t lane)
 		}
 		if (track[index] & (1<<lane))
 		{
+			
+			if (green_check == lane) {
+				points -= 1;
+				update_points();
+				
+				break;
+			}
+			
 			green_check = lane;
 			
 			// if so, colour the two pixels green
@@ -66,27 +74,32 @@ void play_note(uint8_t lane)
 			
 			//if the note is in the two specified lanes then award the appropriate amount of points
 			if (col == 11 || col == 15) {
-				points++;
+				points += 1;
 				
 			} else if (col == 12 || col == 14) {
-				points + 2;
+				points += 2;
 				
 			} else if (col == 13) {
-				points + 3;
-			} else {
-				--points;
+				points += 3;
+			
 			}
+			
+		} else {
+			points -= 1;
+		
+		}
+			
+		update_points();
+		
 		}
 		
-	}
-	
-	
-	
 }
+	
 
 // Advance the notes one row down the display
 void advance_note(void)
 {
+	
 	// remove all the current notes; reverse of below
 	for (uint8_t col=0; col<MATRIX_NUM_COLUMNS; col++)
 	{
@@ -94,6 +107,8 @@ void advance_note(void)
 		uint8_t index = (future + beat) / 5;
 		uint8_t ghost_start_index = ((MATRIX_NUM_COLUMNS - 1) + beat)/5;
 		uint8_t ghost_index = ghost_start_index +1;
+		
+		//iterate over until the next valid future note is coming
 		for (ghost_index; ghost_index < TRACK_LENGTH; ghost_index++) {
 			if (track[ghost_index] & 0x0F) {
 				break;
@@ -117,15 +132,19 @@ void advance_note(void)
 			if ((ghost_note == 0x01) & (lane == 0)) {
 				ledmatrix_update_pixel(0, 2*lane, COLOUR_DARK_RED);
 				ledmatrix_update_pixel(0, 2*lane + 1, COLOUR_DARK_RED);
+				
 			} else if ((ghost_note == 0x02) & (lane == 1)) {
 				ledmatrix_update_pixel(0, 2*lane, COLOUR_DARK_RED);
 				ledmatrix_update_pixel(0, 2*lane + 1, COLOUR_DARK_RED);
+			
 			} else if ((ghost_note == 0x04) & (lane == 2)) {
 				ledmatrix_update_pixel(0, 2*lane, COLOUR_DARK_RED);
 				ledmatrix_update_pixel(0, 2*lane + 1, COLOUR_DARK_RED);
+			
 			} else if ((ghost_note == 0x08) & (lane == 3)) {
 				ledmatrix_update_pixel(0, 2*lane, COLOUR_DARK_RED);
 				ledmatrix_update_pixel(0, 2*lane + 1, COLOUR_DARK_RED);
+			
 			}
 				
 			if (track[index] & (1<<lane))
@@ -197,22 +216,35 @@ void advance_note(void)
 				
 				} else if (ghost_note != track[index]) {
 					
-					ledmatrix_update_pixel(0, 2*lane, COLOUR_BLACK);
-					ledmatrix_update_pixel(0, 2*lane+1, COLOUR_BLACK);
+					
 
 					ledmatrix_update_pixel(col, 2*lane, COLOUR_RED);
 					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_RED);
 					
+					//if note slides off screen and green_check isn't checked to a lane
+					if (col == 15) {
+						points -= 1;
+						
+						update_points();						
+					}
+					
 				} else {
 					ledmatrix_update_pixel(col, 2*lane, COLOUR_RED);
-					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_RED);							
+					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_RED);	
 					
+					//if note slides off screen and green_check isn't checked to a lane
+					if (col == 15) {
+						points -= 1;
+						
+						update_points();						
+					}
 				} 
 				
 				//check if the current note goes off the screen
 				if (col >= 15) {
 					green_check = -1;
 				}
+				
 								
 			}
 		}
@@ -229,4 +261,12 @@ uint8_t is_game_over(void)
 	return 0;
 	
 	}
+}
+
+void update_points() {
+	
+	//clear terminal and reprint the game score with the points
+	move_terminal_cursor(10, 10);
+	clear_to_end_of_line();
+	printf("Game Score:%d", points);
 }
