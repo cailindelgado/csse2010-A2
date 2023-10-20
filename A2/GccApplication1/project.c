@@ -36,6 +36,9 @@ void handle_game_over(void);
 
 uint16_t game_speed;
 
+//is manual on?	
+int man_mode = 0;
+	
 /////////////////////////////// main //////////////////////////////////
 int main(void)
 {
@@ -137,15 +140,38 @@ void start_screen(void)
 		if (btn != NO_BUTTON_PUSHED)
 		{
 			break;
+			
+		} else if (serial_input == 'm' || serial_input == 'M') {
+			if (man_mode) {
+				man_mode = 0;
+				
+				//clear manual mode alert
+				move_terminal_cursor(10, 16);
+				clear_to_end_of_line();
+				
+			} else {
+				man_mode = 1;
+				
+				//print to terminal that manual mode is on
+				move_terminal_cursor(10, 16);
+				clear_to_end_of_line();
+				printf("Manual Mode: ON");
+			}
 		}
 
-		// every 200 ms, update the animation
-		current_time = get_current_time();
-		if (current_time - last_screen_update > game_speed/5)
-		{
-			update_start_screen(frame_number);
-			frame_number = (frame_number + 1) % 32;
-			last_screen_update = current_time;
+		if (!man_mode) {
+			// every 200 ms, update the animation
+			current_time = get_current_time();
+			if (current_time - last_screen_update > game_speed/5)
+			{
+				update_start_screen(frame_number);
+				frame_number = (frame_number + 1) % 32;
+				last_screen_update = current_time;
+			} else {
+				if (serial_input == 'n' || serial_input == 'N') {
+					advance_note();
+				}
+			}
 		}
 	}
 }
@@ -211,21 +237,38 @@ void play_game(void)
 		
 		
 		
-		/*
 		if (keyboard_input == 'm' || keyboard_input == 'M') {
-			//run an interrupt to last until keyboard_input is run again	
-		}
-		*/
+			if (man_mode) {
+				man_mode = 0;
 				
-		current_time = get_current_time();
-		if (current_time >= last_advance_time + game_speed/5)
-		{
-			// 200ms (0.2 second) has passed since the last time we advance the
-			// notes here, so update the advance the notes
-			advance_note();
+				//clear manual mode alert
+				move_terminal_cursor(10, 16);
+				clear_to_end_of_line();
+			} else {
+				man_mode = 1;
+				
+				//print to terminal that manual mode is on
+				move_terminal_cursor(10, 16);
+				clear_to_end_of_line();
+				printf("Manual Mode: ON");
+			}
+		}
+		
+		if (!man_mode) {
+			current_time = get_current_time();
+			if (current_time >= last_advance_time + game_speed/5)
+			{
+				// 200ms (0.2 second) has passed since the last time we advance the
+				// notes here, so update the advance the notes
+				advance_note();
 			
-			// Update the most recent time the notes were advance
-			last_advance_time = current_time;
+				// Update the most recent time the notes were advance
+				last_advance_time = current_time;
+			}
+		} else {
+			if (keyboard_input == 'n' || keyboard_input == 'N') {
+				advance_note();
+			}
 		}
 	}
 	// We get here if the game is over.
@@ -234,22 +277,32 @@ void play_game(void)
 
 void handle_game_over()
 {
+	clear_terminal();
 	move_terminal_cursor(10,14);
 	printf_P(PSTR("GAME OVER"));
 	move_terminal_cursor(10,15);
 	printf("Game Score: %d\n", points);
+	move_terminal_cursor(10, 16);
 	printf_P(PSTR("Press a button or 's'/'S' to start a new game"));
 	
-	//if (serial_input_available()) {
-	//	keyboard_input = fgetc(stdin);
-	//}
 	
-	//if (keyboard_input == 's' || keyboard_input == 'S') {}
 	
 	// Do nothing until a button is pushed. Hint: 's'/'S' should also start a
 	// new game
 	while (button_pushed() == NO_BUTTON_PUSHED)
 	{
-		; // wait
-	}
+		char keyboard_input = -1;
+		
+		
+		if (serial_input_available()) {
+			keyboard_input = fgetc(stdin);
+		}
+		
+		//check if the user presses s
+		if (keyboard_input == 's' || keyboard_input == 'S') {
+			break;
+		}
+	}	
+	
+	start_screen();
 }

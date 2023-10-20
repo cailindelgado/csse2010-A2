@@ -36,13 +36,42 @@ uint16_t beat;
 uint8_t green_check = - 1; 
 uint8_t game_over = 0;
 
+
+
+void update_points() {
+	
+	//clear terminal and reprint the game score with the points
+	move_terminal_cursor(10, 14);
+	clear_to_end_of_line();
+
+	// if x >= 10 and [-9, 0)
+	if ((points >= 10) || (points < 0 && points >= -9)) {
+		printf("Game Score:   %d", points);
+		
+		//if x >= 100 and (-9, -99)
+		} else if ((points >= 100) || (points < -9 && points > -99)) {
+		printf("Game Score:  %d", points);
+		
+		//if x < -99
+		} else if (points < -99) {
+		printf("Game Score: %d", points);
+		
+		} else {
+		printf("Game Score:    %d", points);
+	}
+	
+}
+
 // Initialize the game by resetting the grid and beat
 void initialise_game(void)
 {
 	// initialize the display we are using.
 	default_grid();
 	beat = 0;
+	
+	update_points();
 }
+
 
 // Play a note in the given lane
 void play_note(uint8_t lane)
@@ -60,7 +89,7 @@ void play_note(uint8_t lane)
 		{
 			
 			if (green_check == lane) {
-				points -= 1;
+				points--;
 				update_points();
 				
 				break;
@@ -74,7 +103,7 @@ void play_note(uint8_t lane)
 			
 			//if the note is in the two specified lanes then award the appropriate amount of points
 			if (col == 11 || col == 15) {
-				points += 1;
+				points++;
 				
 			} else if (col == 12 || col == 14) {
 				points += 2;
@@ -85,14 +114,13 @@ void play_note(uint8_t lane)
 			}
 			
 		} else {
-			points -= 1;
+			points--;
 		
 		}
 			
 		update_points();
 		
-		}
-		
+		}	
 }
 	
 
@@ -109,7 +137,7 @@ void advance_note(void)
 		uint8_t ghost_index = ghost_start_index +1;
 		
 		//iterate over until the next valid future note is coming
-		for (ghost_index; ghost_index < TRACK_LENGTH; ghost_index++) {
+		for (; ghost_index < TRACK_LENGTH; ghost_index++) {
 			if (track[ghost_index] & 0x0F) {
 				break;
 			}
@@ -223,8 +251,7 @@ void advance_note(void)
 					
 					//if note slides off screen and green_check isn't checked to a lane
 					if (col == 15) {
-						points -= 1;
-						
+						points--;
 						update_points();						
 					}
 					
@@ -234,8 +261,7 @@ void advance_note(void)
 					
 					//if note slides off screen and green_check isn't checked to a lane
 					if (col == 15) {
-						points -= 1;
-						
+						points--;
 						update_points();						
 					}
 				} 
@@ -255,18 +281,12 @@ void advance_note(void)
 uint8_t is_game_over(void)
 {
 	// Detect if the game is over i.e. if a player has won.
-	if (game_over) {
+	if (game_over) {	
+		game_over = 0;
 		return 1;	
+	
 	} else {
 	return 0;
 	
 	}
-}
-
-void update_points() {
-	
-	//clear terminal and reprint the game score with the points
-	move_terminal_cursor(10, 10);
-	clear_to_end_of_line();
-	printf("Game Score:%d", points);
 }
