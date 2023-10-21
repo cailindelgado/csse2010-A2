@@ -116,6 +116,23 @@ void start_screen(void)
 	
 	uint8_t frame_number = 0;
 	game_speed = 1000;
+	
+	
+	move_terminal_cursor(10, 17);
+	//update terminal line appropriately 
+	if (game_speed == 1000) {
+		clear_to_end_of_line();
+		printf("Current Game Speed: 1 (Normal: %d ms)", game_speed);
+		
+	} else if (game_speed == 500) {
+		clear_to_end_of_line();
+		printf("Current Game Speed: 2 (Fast: %d ms)", game_speed);
+		
+	} else if (game_speed == 250) {
+		clear_to_end_of_line();
+		printf("Current Game Speed: 3 (ExtremeL %d ms", game_speed);
+	}
+	
 
 	// Wait until a button is pressed, or 's' is pressed on the terminal
 	while(1)
@@ -135,6 +152,33 @@ void start_screen(void)
 			break;
 		} 
 		
+		if (serial_input == '1') {
+			game_speed = 1000; //set game speed to 1000ms
+			
+			move_terminal_cursor(10, 17);
+			clear_to_end_of_line();
+			printf("Current Game speed: 1 (Normal: %d ms)", game_speed);
+			
+		} else if (serial_input == '2') {
+			game_speed = 500; //set game speed to 500ms
+			
+			move_terminal_cursor(10, 17);
+			clear_to_end_of_line();
+			printf("Current Game speed: 1 (Normal: %d ms)", game_speed);
+			
+		} else if (serial_input == '3') {
+			game_speed = 250; //set game speed to 250ms
+			
+			move_terminal_cursor(10, 17);
+			clear_to_end_of_line();
+			printf("Current Game speed: 2 (Fast: %d ms)", game_speed);
+			
+			move_terminal_cursor(10, 17);
+			clear_to_end_of_line();
+			printf("Current Game speed: 3 (Extreme: %d ms)", game_speed);
+		}
+		
+		
 		// Next check for any button presses
 		int8_t btn = button_pushed();
 		if (btn != NO_BUTTON_PUSHED)
@@ -143,21 +187,21 @@ void start_screen(void)
 			
 		} else if (serial_input == 'm' || serial_input == 'M') {
 			if (man_mode) {
-				man_mode = 0;
+				man_mode = 0;  // toggle manual mode checker
 				
 				//clear manual mode alert
 				move_terminal_cursor(10, 16);
 				clear_to_end_of_line();
 				
 			} else {
-				man_mode = 1;
+				man_mode = 1; //toggle manual mode checker
 				
 				//print to terminal that manual mode is on
 				move_terminal_cursor(10, 16);
 				clear_to_end_of_line();
 				printf("Manual Mode: ON");
 			}
-		}
+		} 		
 
 		if (!man_mode) {
 			// every 200 ms, update the animation
@@ -176,6 +220,181 @@ void start_screen(void)
 	}
 }
 
+void display_countdown(int countdown) {
+	
+	//clear display
+	ledmatrix_clear();
+	
+	switch (countdown) {
+		case 1: //Then draw the 1
+			for (uint8_t col = 4; col < 11; col++) {
+				ledmatrix_update_pixel(col, 3, COLOUR_RED);
+				ledmatrix_update_pixel(col, 4, COLOUR_RED);
+				
+				if (col == 5) {
+					ledmatrix_update_pixel(col, 2, COLOUR_RED);
+					ledmatrix_update_pixel(col, 4, COLOUR_RED);
+					
+					} else if (col == 10) {
+					ledmatrix_update_pixel(col, 2, COLOUR_RED);
+					ledmatrix_update_pixel(col, 5, COLOUR_RED);
+					
+				}
+			}
+			break;
+			
+		case 2:  //Then draw the 2
+			ledmatrix_update_pixel(4, 2, COLOUR_RED);
+			ledmatrix_update_pixel(4, 3, COLOUR_RED);
+			ledmatrix_update_pixel(4, 4, COLOUR_RED);
+			ledmatrix_update_pixel(4, 5, COLOUR_RED);
+			
+			ledmatrix_update_pixel(5, 1, COLOUR_RED);
+			ledmatrix_update_pixel(5, 2, COLOUR_RED);
+			ledmatrix_update_pixel(5, 5, COLOUR_RED);
+			ledmatrix_update_pixel(5, 6, COLOUR_RED);
+			
+			ledmatrix_update_pixel(6, 5, COLOUR_RED);
+			ledmatrix_update_pixel(6, 6, COLOUR_RED);
+			
+			ledmatrix_update_pixel(7, 5, COLOUR_RED);
+			ledmatrix_update_pixel(7, 6, COLOUR_RED);
+			
+			ledmatrix_update_pixel(8, 2, COLOUR_RED);
+			ledmatrix_update_pixel(8, 3, COLOUR_RED);
+			ledmatrix_update_pixel(8, 4, COLOUR_RED);
+			
+			ledmatrix_update_pixel(9, 1, COLOUR_RED);
+			ledmatrix_update_pixel(9, 2, COLOUR_RED);
+			
+			ledmatrix_update_pixel(10, 1, COLOUR_RED);
+			ledmatrix_update_pixel(10, 2, COLOUR_RED);
+			ledmatrix_update_pixel(10, 3, COLOUR_RED);
+			ledmatrix_update_pixel(10, 4, COLOUR_RED);
+			ledmatrix_update_pixel(10, 5, COLOUR_RED);
+			ledmatrix_update_pixel(10, 6, COLOUR_RED);
+			break;
+			
+		case 3: //Then draw the 3
+			for (uint8_t col = 4; col < 11; col ++) {
+				if (col == 4 || col == 10) {
+					ledmatrix_update_pixel(col, 2, COLOUR_YELLOW);
+					ledmatrix_update_pixel(col, 3, COLOUR_YELLOW);
+					ledmatrix_update_pixel(col, 4, COLOUR_YELLOW);
+					ledmatrix_update_pixel(col, 5, COLOUR_YELLOW);
+					
+					} else if (col == 5 || col == 9) {
+					ledmatrix_update_pixel(col, 1, COLOUR_YELLOW);
+					ledmatrix_update_pixel(col, 2, COLOUR_YELLOW);
+					ledmatrix_update_pixel(col, 5, COLOUR_YELLOW);
+					ledmatrix_update_pixel(col, 6, COLOUR_YELLOW);
+					
+					} else if (col == 6 || col == 8) {
+					ledmatrix_update_pixel(col, 5, COLOUR_YELLOW);
+					ledmatrix_update_pixel(col, 6, COLOUR_YELLOW);
+					
+					} else {
+					ledmatrix_update_pixel(col, 2, COLOUR_YELLOW);
+					ledmatrix_update_pixel(col, 3, COLOUR_YELLOW);
+					ledmatrix_update_pixel(col, 4, COLOUR_YELLOW);
+				}
+			}
+			break;
+		
+		case 4: //Then draw the Go
+			ledmatrix_update_pixel(5, 1, COLOUR_GREEN);
+			ledmatrix_update_pixel(5, 2, COLOUR_GREEN);
+			ledmatrix_update_pixel(5, 3, COLOUR_GREEN);
+			ledmatrix_update_pixel(5, 5, COLOUR_GREEN);
+			ledmatrix_update_pixel(5, 6, COLOUR_GREEN);
+			ledmatrix_update_pixel(5, 7, COLOUR_GREEN);
+			
+			ledmatrix_update_pixel(6, 0, COLOUR_GREEN);
+			ledmatrix_update_pixel(6, 5, COLOUR_GREEN);
+			ledmatrix_update_pixel(6, 7, COLOUR_GREEN);
+			
+			ledmatrix_update_pixel(7, 0, COLOUR_GREEN);
+			ledmatrix_update_pixel(7, 2, COLOUR_GREEN);
+			ledmatrix_update_pixel(7, 3, COLOUR_GREEN);
+			ledmatrix_update_pixel(7, 5, COLOUR_GREEN);
+			ledmatrix_update_pixel(7, 7, COLOUR_GREEN);
+			
+			ledmatrix_update_pixel(8, 0, COLOUR_GREEN);
+			ledmatrix_update_pixel(8, 3, COLOUR_GREEN);
+			ledmatrix_update_pixel(8, 5, COLOUR_GREEN);
+			ledmatrix_update_pixel(8, 7, COLOUR_GREEN);
+			
+			ledmatrix_update_pixel(9, 1, COLOUR_GREEN);
+			ledmatrix_update_pixel(9, 2, COLOUR_GREEN);
+			ledmatrix_update_pixel(5, 3, COLOUR_GREEN);
+			ledmatrix_update_pixel(9, 5, COLOUR_GREEN);
+			ledmatrix_update_pixel(9, 6, COLOUR_GREEN);
+			ledmatrix_update_pixel(9, 7, COLOUR_GREEN);
+		
+		default:
+			break;
+	}
+	
+}
+
+													/////////////////////////////////////Game Count-Down/////////////////////////////////////
+void game_countdown() {
+	
+	uint32_t current_time = get_current_time();
+	uint32_t last_recorded_time = current_time;
+
+	display_countdown(1); // display 1
+	
+	while (1) {
+		//update current time
+		current_time = get_current_time();
+		
+		//if the change in time between the 1 being drawn hits 2 * game speed
+		if ((current_time - last_recorded_time) >= (2 * game_speed)) {
+			display_countdown(2); //display 2
+			last_recorded_time = current_time;
+			break;
+		}
+	}
+	
+	while (1) {
+		//update current time
+		current_time = get_current_time();
+		
+		//if the change in time between the 1 being drawn hits 2 * game speed
+		if ((current_time - last_recorded_time) >= (2 * game_speed)) {
+			display_countdown(3); //display 3
+			
+			last_recorded_time = current_time;
+			break;
+		}
+	}
+	
+	while (1) {
+		//update current time
+		current_time = get_current_time();
+		
+		//if the change in time between the 1 being drawn hits 2 * game speed
+		if ((current_time - last_recorded_time) >= (2 * game_speed)) {
+			display_countdown(4); //display go
+			
+			last_recorded_time = current_time;
+			break;
+		}
+	}
+	
+	//turn into a loop
+	while (1) {
+		//update current time
+		current_time = get_current_time();
+		
+		//if the change in time between the 1 being drawn hits 2 * game speed
+		if ((current_time - last_recorded_time) >= (2 * game_speed)) {
+			break;
+		}
+	}
+}
+
 void new_game(void)
 {
 	// Clear the serial terminal
@@ -184,6 +403,9 @@ void new_game(void)
 	//reset number of points player has
 	points = 0;
 	
+	//game countdown
+	game_countdown();
+		
 	// Initialize the game and display
 	initialise_game();
 	
@@ -235,8 +457,6 @@ void play_game(void)
 			
 		} 
 		
-		
-		
 		if (keyboard_input == 'm' || keyboard_input == 'M') {
 			if (man_mode) {
 				man_mode = 0;
@@ -261,7 +481,7 @@ void play_game(void)
 				// 200ms (0.2 second) has passed since the last time we advance the
 				// notes here, so update the advance the notes
 				advance_note();
-			
+				
 				// Update the most recent time the notes were advance
 				last_advance_time = current_time;
 			}
@@ -272,7 +492,6 @@ void play_game(void)
 		}
 	}
 	// We get here if the game is over.
-	handle_game_over();
 }
 
 void handle_game_over()
@@ -284,8 +503,6 @@ void handle_game_over()
 	printf("Game Score: %d\n", points);
 	move_terminal_cursor(10, 16);
 	printf_P(PSTR("Press a button or 's'/'S' to start a new game"));
-	
-	
 	
 	// Do nothing until a button is pushed. Hint: 's'/'S' should also start a
 	// new game

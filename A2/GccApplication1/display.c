@@ -69,7 +69,7 @@ void update_start_screen(uint8_t frame_number)
 	}
 }
 
-// Initialise the display for the board, this creates the display
+// Initialize the display for the board, this creates the display
 // for an empty board.
 void default_grid(void)
 {

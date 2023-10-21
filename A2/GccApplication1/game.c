@@ -36,8 +36,6 @@ uint16_t beat;
 uint8_t green_check = - 1; 
 uint8_t game_over = 0;
 
-
-
 void update_points() {
 	
 	//clear terminal and reprint the game score with the points
@@ -62,13 +60,15 @@ void update_points() {
 	
 }
 
+
 // Initialize the game by resetting the grid and beat
 void initialise_game(void)
 {
 	// initialize the display we are using.
 	default_grid();
-	beat = 0;
 	
+	beat = 0;
+	game_over = 0;
 	update_points();
 }
 
@@ -119,7 +119,6 @@ void play_note(uint8_t lane)
 		}
 			
 		update_points();
-		
 		}	
 }
 	
@@ -242,10 +241,7 @@ void advance_note(void)
 					ledmatrix_update_pixel(col, 2*lane, COLOUR_GREEN);
 					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_GREEN);
 				
-				} else if (ghost_note != track[index]) {
-					
-					
-
+				} else if (ghost_note != track[index]) {					
 					ledmatrix_update_pixel(col, 2*lane, COLOUR_RED);
 					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_RED);
 					
@@ -282,7 +278,7 @@ uint8_t is_game_over(void)
 {
 	// Detect if the game is over i.e. if a player has won.
 	if (game_over) {	
-		game_over = 0;
+		game_over = 0; //reset game over check
 		return 1;	
 	
 	} else {
