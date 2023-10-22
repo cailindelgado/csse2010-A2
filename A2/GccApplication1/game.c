@@ -32,14 +32,16 @@ static const uint8_t track[TRACK_LENGTH] = {0x00,
 	0x04, 0x40, 0x08, 0x04, 0x40, 0x40, 0x02, 0x20,
 0x01, 0x10, 0x10, 0x10, 0x00, 0x00, 0x00, 0x00};
 
+// the 0x12 is the end of the long note of 0x10 and the start of a long note in lane 2
+
+
 uint16_t beat;
 uint8_t green_check = - 1; 
 uint8_t game_over = 0;
 
 void update_points() {
-	
-	//clear terminal and reprint the game score with the points
-	move_terminal_cursor(10, 14);
+	//clear terminal line and reprint the game score with the points
+	move_terminal_cursor(10, 13);
 	clear_to_end_of_line();
 
 	// if x >= 10 and [-9, 0)
@@ -47,17 +49,41 @@ void update_points() {
 		printf("Game Score:   %d", points);
 		
 		//if x >= 100 and (-9, -99)
-		} else if ((points >= 100) || (points < -9 && points > -99)) {
+	} else if ((points >= 100) || (points < -9 && points > -99)) {
 		printf("Game Score:  %d", points);
 		
 		//if x < -99
-		} else if (points < -99) {
+	} else if (points < -99) {
 		printf("Game Score: %d", points);
 		
-		} else {
+	} else {
 		printf("Game Score:    %d", points);
 	}
+}
+
+void update_combo() {
+	//Clear terminal line and reprint the combo count
+	move_terminal_cursor(10, 14);
+	clear_to_end_of_line();
 	
+	//adjusts the combo count padding so it matches points
+	if (combo_count >= 10) {
+		printf("Combo Count:  %d", combo_count);
+		
+	} else if (combo_count >= 100) {
+		printf("Combo Count: %d", combo_count);
+		
+	} else {
+		printf("Combo Count:   %d", combo_count);
+	}
+	
+	
+	//update combo check accordingly
+	if (combo_count >= 3) {
+		combo_check = 1;
+	} else {
+		combo_check = 0;
+	}
 }
 
 
@@ -70,6 +96,7 @@ void initialise_game(void)
 	beat = 0;
 	game_over = 0;
 	update_points();
+	update_combo();
 }
 
 
@@ -86,11 +113,13 @@ void play_note(uint8_t lane)
 			continue;
 		}
 		if (track[index] & (1<<lane))
-		{
-			
+		{	
 			if (green_check == lane) {
 				points--;
 				update_points();
+				
+				combo_count = 0;
+				update_combo();
 				
 				break;
 			}
@@ -104,21 +133,29 @@ void play_note(uint8_t lane)
 			//if the note is in the two specified lanes then award the appropriate amount of points
 			if (col == 11 || col == 15) {
 				points++;
+				combo_count = 0;
 				
 			} else if (col == 12 || col == 14) {
 				points += 2;
+				combo_count = 0;
 				
 			} else if (col == 13) {
-				points += 3;
-			
+				if (combo_count > 3) {
+					points += 4;
+				} else {
+					points += 3;
+					combo_count++;
+				}
 			}
 			
 		} else {
 			points--;
+			combo_count = 0;
 		
 		}
 			
 		update_points();
+		update_combo();
 		}	
 }
 	
@@ -248,7 +285,12 @@ void advance_note(void)
 					//if note slides off screen and green_check isn't checked to a lane
 					if (col == 15) {
 						points--;
-						update_points();						
+						update_points();		
+						
+						if (combo_count != 0) {
+							combo_count = 0;
+							update_combo();				
+						}
 					}
 					
 				} else {
@@ -258,7 +300,12 @@ void advance_note(void)
 					//if note slides off screen and green_check isn't checked to a lane
 					if (col == 15) {
 						points--;
-						update_points();						
+						update_points();		
+						
+						if (combo_count != 0) {
+							combo_count = 0;
+							update_combo();
+						}			
 					}
 				} 
 				

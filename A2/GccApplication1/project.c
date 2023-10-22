@@ -38,6 +38,9 @@ uint16_t game_speed;
 
 //is manual on?	
 int man_mode = 0;
+
+//is the game paused?
+int paused = 0;
 	
 /////////////////////////////// main //////////////////////////////////
 int main(void)
@@ -65,6 +68,11 @@ void initialise_hardware(void)
 {
 	ledmatrix_setup();
 	init_button_interrupts();
+	
+	//Make all bits of port C and the upper 5 bits of port D to be output bits
+	DDRC = 0xFF; //0xFF => 0b11111111
+	DDRD = 0xFC; //0xFC => 0b11111100																						//is this valid??
+	
 	// Setup serial port for 19200 baud communication with no echo
 	// of incoming characters
 	init_serial_stdio(19200, 0);
@@ -110,6 +118,10 @@ void start_screen(void)
 	// Output the static start screen and wait for a push button 
 	// to be pushed or a serial input of 's'
 	show_start_screen();
+	
+	//Display current track
+	move_terminal_cursor(10, 15);
+	printf("Track: Through Fire & Flames");															//do %s and add a new track title at the end.
 
 	uint32_t last_screen_update, current_time;
 	last_screen_update = get_current_time();
@@ -119,18 +131,16 @@ void start_screen(void)
 	
 	
 	move_terminal_cursor(10, 17);
-	//update terminal line appropriately 
+	clear_to_end_of_line();
+	//update game speed in terminal appropriately
 	if (game_speed == 1000) {
-		clear_to_end_of_line();
 		printf("Current Game Speed: 1 (Normal: %d ms)", game_speed);
 		
 	} else if (game_speed == 500) {
-		clear_to_end_of_line();
 		printf("Current Game Speed: 2 (Fast: %d ms)", game_speed);
 		
 	} else if (game_speed == 250) {
-		clear_to_end_of_line();
-		printf("Current Game Speed: 3 (ExtremeL %d ms", game_speed);
+		printf("Current Game Speed: 3 (Extreme: %d ms)", game_speed);
 	}
 	
 
@@ -152,30 +162,28 @@ void start_screen(void)
 			break;
 		} 
 		
+		
+		//display the game speed to the terminal
 		if (serial_input == '1') {
 			game_speed = 1000; //set game speed to 1000ms
 			
 			move_terminal_cursor(10, 17);
 			clear_to_end_of_line();
-			printf("Current Game speed: 1 (Normal: %d ms)", game_speed);
+			printf("Current Game Speed: 1 (Normal: %d ms)", game_speed);
 			
 		} else if (serial_input == '2') {
 			game_speed = 500; //set game speed to 500ms
 			
 			move_terminal_cursor(10, 17);
 			clear_to_end_of_line();
-			printf("Current Game speed: 1 (Normal: %d ms)", game_speed);
+			printf("Current Game Speed: 2 (Fast: %d ms)", game_speed);
 			
 		} else if (serial_input == '3') {
 			game_speed = 250; //set game speed to 250ms
 			
 			move_terminal_cursor(10, 17);
 			clear_to_end_of_line();
-			printf("Current Game speed: 2 (Fast: %d ms)", game_speed);
-			
-			move_terminal_cursor(10, 17);
-			clear_to_end_of_line();
-			printf("Current Game speed: 3 (Extreme: %d ms)", game_speed);
+			printf("Current Game Speed: 3 (Extreme: %d ms)", game_speed);
 		}
 		
 		
@@ -186,19 +194,16 @@ void start_screen(void)
 			break;
 			
 		} else if (serial_input == 'm' || serial_input == 'M') {
+			//clear manual mode alert
+			move_terminal_cursor(10, 16);
+			clear_to_end_of_line();
+			
 			if (man_mode) {
 				man_mode = 0;  // toggle manual mode checker
 				
-				//clear manual mode alert
-				move_terminal_cursor(10, 16);
-				clear_to_end_of_line();
-				
 			} else {
-				man_mode = 1; //toggle manual mode checker
-				
+				man_mode = 1; //toggle manual mode checker				
 				//print to terminal that manual mode is on
-				move_terminal_cursor(10, 16);
-				clear_to_end_of_line();
 				printf("Manual Mode: ON");
 			}
 		} 		
@@ -337,7 +342,6 @@ void display_countdown(int countdown) {
 	
 }
 
-													/////////////////////////////////////Game Count-Down/////////////////////////////////////
 void game_countdown() {
 	
 	uint32_t current_time = get_current_time();
@@ -383,7 +387,7 @@ void game_countdown() {
 		}
 	}
 	
-	//turn into a loop
+																														//turn into a loop
 	while (1) {
 		//update current time
 		current_time = get_current_time();
@@ -403,7 +407,7 @@ void new_game(void)
 	//reset number of points player has
 	points = 0;
 	
-	//game countdown
+	//Start Game Countdown
 	game_countdown();
 		
 	// Initialize the game and display
@@ -419,9 +423,29 @@ void play_game(void)
 {
 	
 	uint32_t last_advance_time, current_time;
+	
 	int8_t btn; // The button pushed
 	
+	//int combo_line = 0;
+	
 	last_advance_time = get_current_time();
+	
+	//Display current track
+	move_terminal_cursor(10, 15);
+	printf("Track: Through Fire & Flames");																//do %s and add a new track title at the end.
+	
+	move_terminal_cursor(10, 18);
+	clear_to_end_of_line();
+	//update terminal line appropriately
+	if (game_speed == 1000) {
+		printf("Current Game Speed: 1 (Normal: %d ms)", game_speed);
+		
+	} else if (game_speed == 500) {
+		printf("Current Game Speed: 2 (Fast: %d ms)", game_speed);
+		
+	} else if (game_speed == 250) {
+		printf("Current Game Speed: 3 (Extreme: %d ms)", game_speed);
+	}
 	
 	// We play the game until it's over
 	while (!is_game_over())
@@ -458,50 +482,165 @@ void play_game(void)
 		} 
 		
 		if (keyboard_input == 'm' || keyboard_input == 'M') {
-			if (man_mode) {
-				man_mode = 0;
-				
+			//check to see if the game is currently paused
+			if (!paused) {
 				//clear manual mode alert
 				move_terminal_cursor(10, 16);
 				clear_to_end_of_line();
-			} else {
-				man_mode = 1;
-				
-				//print to terminal that manual mode is on
-				move_terminal_cursor(10, 16);
+				if (man_mode) {
+					man_mode = 0;
+		
+				} else {
+					man_mode = 1;
+					
+					//print to terminal that manual mode is on
+					printf("Manual Mode: ON");
+				}
+			}	
+		}
+		
+		if (keyboard_input == 'p' || keyboard_input == 'P') {
+			//Check to see if the game is in manual mode
+			if (!man_mode) {
+				//clear pause line in terminal
+				move_terminal_cursor(10, 17);
 				clear_to_end_of_line();
-				printf("Manual Mode: ON");
+				if (paused) {
+					paused = 0;
+					PORTD = PORTD & 0b11110111;
+			
+				} else {
+					paused = 1;
+					PORTD = PORTD | (1<<3); //essentially just PORTD | 0b00001000
+					
+					//tell user that game is currently paused
+					printf("Game Paused");
+				}
+				
 			}
 		}
 		
-		if (!man_mode) {
+		//Combo IO board LED's
+		if (combo_count == 0) {
+			//set portD outputs to the I/O boards LED matrix to be 0
+			PORTD = PORTD & 0b10001111;
+
+		} else if (combo_count == 1) {
+			//set appropriate led connection to be high
+			PORTD = PORTD | (1<<4); //essentially just PORTD | 0b00010000
+			
+		} else if (combo_count == 2) {
+			//set appropriate led connection to be high
+			PORTD = PORTD | (1<<5);
+			
+		} else if (combo_count >= 3) {
+			//set appropriate led connection to be high
+			PORTD = PORTD | (1<<6);
+		}
+		
+		/*
+		//Combo display																			//WHY DOES IT SLOW DOWN THE 'n' feature of manual mode.
+		if ((combo_check) && (combo_line == 0)) {
+			move_terminal_cursor(10, 3);
+			printf("  ______                           __                  __");
+			
+			combo_line++; //increment combo line so in next loop the next line is printed of ascii art
+		} else if (combo_line == 1) {
+			move_terminal_cursor(10,4);
+			printf(" /      \\                         |  \\                |  \\");
+			
+			combo_line++;
+		} else if (combo_line == 2) {
+			move_terminal_cursor(10,5);
+			printf("|  $$$$$$\\  ______   ______ ____  | $$____    ______  | $$");
+			
+			combo_line++;
+		} else if (combo_line == 3) {
+			move_terminal_cursor(10,6);
+			printf("| $$   \\$$ /      \\ |      \\    \\ | $$    \\  /      \\ | $$");
+			
+			combo_line++;
+		} else if (combo_line == 4) {
+			move_terminal_cursor(10,7);
+			printf("| $$      |  $$$$$$\\| $$$$$$\\$$$$\\| $$$$$$$\\|  $$$$$$\\| $$");
+			
+			combo_line++;
+		}  else if (combo_line == 5) {
+			move_terminal_cursor(10,8);
+			printf("| $$   __ | $$  | $$| $$ | $$ | $$| $$  | $$| $$  | $$ \\$$");
+			
+			combo_line++;
+		} else if (combo_line == 6) {
+			move_terminal_cursor(10,9);
+			printf("| $$__/  \\| $$__/ $$| $$ | $$ | $$| $$__/ $$| $$__/ $$ __");
+			
+			combo_line++;
+		} else if (combo_line == 7) {
+			move_terminal_cursor(10,10);
+			printf(" \\$$    $$ \\$$    $$| $$ | $$ | $$| $$    $$ \\$$    $$|  \\");
+			
+			combo_line++;
+		} else if (combo_line == 8) {
+			move_terminal_cursor(10,11);
+			printf("  \\$$$$$$   \\$$$$$$  \\$$  \\$$  \\$$ \\$$$$$$$   \\$$$$$$  \\$$");
+			
+			combo_line = 0;
+		}
+		
+		if (!combo_check) {
+			for (int term_line = 3; term_line < 12; term_line++) {
+				move_terminal_cursor(10, term_line);
+				clear_to_end_of_line();
+				
+			}
+		}
+		*/
+		
+		if (!man_mode & !paused) {
 			current_time = get_current_time();
+			
 			if (current_time >= last_advance_time + game_speed/5)
 			{
 				// 200ms (0.2 second) has passed since the last time we advance the
 				// notes here, so update the advance the notes
 				advance_note();
 				
-				// Update the most recent time the notes were advance
+				// Update the most recent time the notes were advanced
 				last_advance_time = current_time;
 			}
-		} else {
+			
+		} else if (man_mode) {
 			if (keyboard_input == 'n' || keyboard_input == 'N') {
 				advance_note();
 			}
 		}
 	}
-	// We get here if the game is over.
 }
 
 void handle_game_over()
 {
 	clear_terminal();
-	move_terminal_cursor(10,14);
+	move_terminal_cursor(10,13);
 	printf_P(PSTR("GAME OVER"));
-	move_terminal_cursor(10,15);
-	printf("Game Score: %d\n", points);
+	move_terminal_cursor(10,14);
+	printf("Final Score: %d\n", points);
+	//Display current track
+	move_terminal_cursor(10, 15);
+	printf("Track: Through Fire & Flames");																//do %s and add a new track title at the end.
 	move_terminal_cursor(10, 16);
+	clear_to_end_of_line();
+	//display game sped
+	if (game_speed == 1000) {
+		printf("Current Game Speed: 1 (Normal: %d ms)", game_speed);
+		
+		} else if (game_speed == 500) {
+		printf("Current Game Speed: 2 (Fast: %d ms)", game_speed);
+		
+		} else if (game_speed == 250) {
+		printf("Current Game Speed: 3 (Extreme: %d ms)", game_speed);
+	}
+	
+	move_terminal_cursor(10, 17);
 	printf_P(PSTR("Press a button or 's'/'S' to start a new game"));
 	
 	// Do nothing until a button is pushed. Hint: 's'/'S' should also start a
@@ -509,8 +648,7 @@ void handle_game_over()
 	while (button_pushed() == NO_BUTTON_PUSHED)
 	{
 		char keyboard_input = -1;
-		
-		
+				
 		if (serial_input_available()) {
 			keyboard_input = fgetc(stdin);
 		}

@@ -28,6 +28,13 @@ void advance_note(void);
 // Returns 1 if the game is over, 0 otherwise.
 uint8_t is_game_over(void);
 
+//number of points player has
 int points;
+
+//the current combo count that the player has
+int combo_count;
+
+//check if the combo is above or equal to 3
+int combo_check;
 
 #endif
