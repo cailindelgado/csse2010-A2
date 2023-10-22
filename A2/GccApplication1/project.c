@@ -507,11 +507,11 @@ void play_game(void)
 				clear_to_end_of_line();
 				if (paused) {
 					paused = 0;
-					PORTD = PORTD & 0b11110111;
+					PORTD = PORTD & 0b01111111;
 			
 				} else {
 					paused = 1;
-					PORTD = PORTD | (1<<3); //essentially just PORTD | 0b00001000
+					PORTD = PORTD | (1<<7); //essentially just PORTD | 0b00001000
 					
 					//tell user that game is currently paused
 					printf("Game Paused");
