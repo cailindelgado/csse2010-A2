@@ -22,3 +22,9 @@ void init_timer1(void)
 	TCCR1B = (1 << WGM13) | (1 << WGM12) | (0 << CS12) | (1 << CS11) | (0 << CS10);
 	TCNT1 = 0;
 }
+
+/*
+ISR() {
+	;
+}
+*/

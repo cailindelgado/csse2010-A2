@@ -83,7 +83,7 @@ void initialise_hardware(void)
 	
 	//Make all bits of port C and the upper 5 bits of port D to be output bits
 	DDRC = 0xFF; //0xFF => 0b11111111
-	DDRD = 0xFC; //0xFC => 0b11111100																						//is this valid??
+	DDRD = 0xFC; //0xFC => 0b11111100		
 	
 	// Setup serial port for 19200 baud communication with no echo
 	// of incoming characters
@@ -414,9 +414,18 @@ void game_countdown() {
 void ssd_display() {
 	//SSD section  //maybe put into the interrupt section
 	//change displayed digit,
+	int left_digit = 0;
+	int right_digit = 0;
 	
 	if (seven_seg_cc) {
 		PORTD = PORTD | (1<<2);
+		
+		if (points >= 0) {
+			PORTC = seven_seg_data[right_digit];
+		} else {
+			PORTC = 64;
+		}
+		
 	} else {
 		PORTD = PORTD & 0b11111011;
 	}
@@ -427,24 +436,29 @@ void ssd_display() {
 		//display on SSD points
 		PORTC = seven_seg_data[points];
 		
-	} else if ((points > 9) && (points < 100)) {
-		//leftmost number appears on left of ssd and rightmost on the right
-		PORTC = seven_seg_data[points];
-		seven_seg_cc ^= 1; //make so that it outputs high to the 
-		PORTC = seven_seg_data[points];
+	} else if ((points > 9) && (points < 100)) { //points are 2 digits e.g. 12, 39, 42
+		left_digit = points	/ 10; // tens column
+		right_digit = points % 10; //ones column
 		
-	} else if ((points >= 100)) {
-		//only display right most two parts like above
-		;
+		PORTC = seven_seg_data[left_digit];
+		seven_seg_cc ^= 1; //make so that it outputs high to the 
+		//PORTC = seven_seg_data[right_digit];
+		
+	} else if ((points >= 100)) { //points are 3 digits, e.g. 123, 256, 828
+		left_digit = points /10 % 10; //tens column
+		right_digit = points % 10;
+		
+		PORTC = seven_seg_data[right_digit];
+		seven_seg_cc ^= 1;
 		
 	} else if ((points < 0) && (points > -10)) {
-		//the negative appears in left side of ssd and number on right
-		PORTC = seven_seg_data[0 - points]; //
+		right_digit = -1 * points;
+		PORTC = seven_seg_data[right_digit]; 
 		seven_seg_cc ^= 1;
 		//PORTC = 64;
 		
 	} else if (points <= -10) {
-		//ssd displays "--"
+		//SSD displays "--"
 		PORTC = 64;
 		seven_seg_cc ^= 1;
 

@@ -20,7 +20,7 @@ project.d project.o: .././project.c \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\math.h \
  .././game.h .././display.h .././pixel_colour.h .././ledmatrix.h \
  .././buttons.h .././serialio.h .././terminalio.h .././timer0.h \
- .././timer1.h .././timer2.h .././project.h
+ .././timer1.h .././project.h .././timer2.h
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdio.h:
 
@@ -78,6 +78,6 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 
 .././timer1.h:
 
-.././timer2.h:
-
 .././project.h:
+
+.././timer2.h:
