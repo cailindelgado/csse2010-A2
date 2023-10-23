@@ -103,7 +103,7 @@ void play_note(uint8_t lane)
 	for (uint8_t col = 11; col < MATRIX_NUM_COLUMNS; col++) {
 	
 		uint8_t future = MATRIX_NUM_COLUMNS - 1 - col; //this is the next position that the note will be in
-		uint8_t index = (future + beat) / 5;	//this is the note??
+		uint8_t index = (future + beat) / 5; 
 		
 		if ((future + beat) % 5) {
 			continue;

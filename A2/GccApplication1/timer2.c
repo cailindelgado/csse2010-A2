@@ -18,7 +18,7 @@ void init_timer2(void)
 	
 	//TCNT2 = 0;
 	//set up so that there is an interrupt every 10ms (100 times per second)
-	OCR2A = 77; //clock divided by 8 - count for 10000 cycles
+	OCR2A = 77; //clock divided by 1024 - count for 10000 cycles
 	TCCR2A = 0; //CTC mode
 	TCCR2B = (1<<WGM22) | (1<<CS22) | (1<<CS20); // Divide clock by 1024(PRE) 
 	

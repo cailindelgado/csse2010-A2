@@ -40,18 +40,14 @@ uint16_t game_speed;
 //is manual on?	
 int man_mode = 0;
 
-
 //is the game paused?
 int paused = 0;
 
 //Seven segment display digit being displayed
 volatile int seven_seg_cc = 0;
 
-//basically if (side_check) ? #display left : #display right
-//int side_check = 0;
-
 //seven segment display segment values for 0 to 9
-uint8_t seven_seg_data[10] = {63,6,91,79,102,109,125,7,127,111};
+uint8_t seven_seg_data[11] = {63,6,91,79,102,109,125,7,127,111,64};
 
 	
 /////////////////////////////// main //////////////////////////////////
@@ -417,51 +413,35 @@ void ssd_display() {
 	int left_digit = 0;
 	int right_digit = 0;
 	
-	if (seven_seg_cc) {
-		PORTD = PORTD | (1<<2);
-		
-		if (points >= 0) {
-			PORTC = seven_seg_data[right_digit];
-		} else {
-			PORTC = 64;
-		}
-		
-	} else {
-		PORTD = PORTD & 0b11111011;
-	}
-	
-	if ((points <= 9) && (points >=0)) {
-		//side_check = 0;
-		
-		//display on SSD points
-		PORTC = seven_seg_data[points];
-		
-	} else if ((points > 9) && (points < 100)) { //points are 2 digits e.g. 12, 39, 42
+	if ((points > 9) && (points < 100)) {
 		left_digit = points	/ 10; // tens column
 		right_digit = points % 10; //ones column
 		
-		PORTC = seven_seg_data[left_digit];
-		seven_seg_cc ^= 1; //make so that it outputs high to the 
-		//PORTC = seven_seg_data[right_digit];
-		
-	} else if ((points >= 100)) { //points are 3 digits, e.g. 123, 256, 828
+	} else if ((points >= 100)) {
 		left_digit = points /10 % 10; //tens column
 		right_digit = points % 10;
 		
-		PORTC = seven_seg_data[right_digit];
-		seven_seg_cc ^= 1;
-		
 	} else if ((points < 0) && (points > -10)) {
 		right_digit = -1 * points;
-		PORTC = seven_seg_data[right_digit]; 
-		seven_seg_cc ^= 1;
-		//PORTC = 64;
-		
+		left_digit = 10;
+	
 	} else if (points <= -10) {
 		//SSD displays "--"
-		PORTC = 64;
+		right_digit = 10;
+		left_digit = 10;
+	}
+	
+	if (seven_seg_cc) { //is seven_seg_cc, then ssd displays to the left
+		PORTD = PORTD | (1<<2);	
+		PORTC = seven_seg_data[left_digit];
+		
 		seven_seg_cc ^= 1;
-
+		
+	} else {
+		PORTD = PORTD & 0b11111011;				//Display Right digit
+		PORTC = seven_seg_data[right_digit];
+		
+		seven_seg_cc ^= 1;
 	}
 }
 
@@ -472,6 +452,7 @@ void new_game(void)
 	
 	//reset number of points player has
 	points = 0;
+	combo_count = 0;
 	
 	//Start Game Countdown
 	game_countdown();
@@ -487,8 +468,10 @@ void new_game(void)
 
 void play_game(void)
 {
-	
 	uint32_t last_advance_time, current_time;
+	
+	//time that the game is paused for
+	uint32_t pause_time = 0;
 	
 	int8_t btn; // The button pushed
 	
@@ -577,6 +560,8 @@ void play_game(void)
 			
 				} else {
 					paused = 1;
+					pause_time = get_current_time(); 
+					
 					PORTD = PORTD | (1<<3); //essentially just PORTD | 0b00001000
 					
 					//tell user that game is currently paused
@@ -660,11 +645,13 @@ void play_game(void)
 			}
 		}
 		
+																									//HERE
 		if (!man_mode & !paused) {
 			current_time = get_current_time();
 			
-			if (current_time >= last_advance_time + game_speed/5)
+			if (current_time - pause_time >= last_advance_time + game_speed/5)
 			{
+				pause_time = 0;
 				// 200ms (0.2 second) has passed since the last time we advance the
 				// notes here, so update the advance the notes
 				advance_note();
