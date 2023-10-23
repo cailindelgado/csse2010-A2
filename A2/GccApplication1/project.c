@@ -560,7 +560,7 @@ void play_game(void)
 			
 				} else {
 					paused = 1;
-					pause_time = get_current_time(); 
+					pause_time = get_current_time() - last_advance_time; 
 					
 					PORTD = PORTD | (1<<3); //essentially just PORTD | 0b00001000
 					
@@ -645,7 +645,7 @@ void play_game(void)
 			}
 		}
 		
-																									//HERE
+
 		if (!man_mode & !paused) {
 			current_time = get_current_time();
 			
