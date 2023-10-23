@@ -41,6 +41,9 @@ int man_mode = 0;
 
 //is the game paused?
 int paused = 0;
+
+//SSD numbers 
+uint8_t seven_seg_data[10] = {63,6,91,79,102,109,125,7,127,111};
 	
 /////////////////////////////// main //////////////////////////////////
 int main(void)
@@ -507,11 +510,11 @@ void play_game(void)
 				clear_to_end_of_line();
 				if (paused) {
 					paused = 0;
-					PORTD = PORTD & 0b01111111;
+					PORTD = PORTD & 0b11110111;
 			
 				} else {
 					paused = 1;
-					PORTD = PORTD | (1<<7); //essentially just PORTD | 0b00001000
+					PORTD = PORTD | (1<<3); //essentially just PORTD | 0b00001000
 					
 					//tell user that game is currently paused
 					printf("Game Paused");
@@ -520,22 +523,45 @@ void play_game(void)
 			}
 		}
 		
+		//SSD section  //maybe put into the interrupt section
+		if ((points <= 9) && (points >=0)) {
+			//display on SSD points
+			PORTC = seven_seg_data[points];
+				
+		} else if ((points > 9) && (points < 100)) {
+		//leftmost number appears on left of ssd and rightmost on the right
+			;
+			
+		} else if ((points >= 100)) {
+			//only display right most two parts like above 
+			;
+			
+		} else if ((points < 0) && (points > -10)) {
+			//the negative appears in left side of ssd and number on right	
+			;
+				
+		} else if (points <= -10) {
+			//ssd displays "--"
+			;
+			
+		} 
+		
 		//Combo IO board LED's
 		if (combo_count == 0) {
 			//set portD outputs to the I/O boards LED matrix to be 0
-			PORTD = PORTD & 0b10001111;
+			PORTD = PORTD & 0b00011111;
 
 		} else if (combo_count == 1) {
 			//set appropriate led connection to be high
-			PORTD = PORTD | (1<<4); //essentially just PORTD | 0b00010000
+			PORTD = PORTD | (1<<5); 
 			
 		} else if (combo_count == 2) {
 			//set appropriate led connection to be high
-			PORTD = PORTD | (1<<5);
+			PORTD = PORTD | (1<<6);
 			
 		} else if (combo_count >= 3) {
 			//set appropriate led connection to be high
-			PORTD = PORTD | (1<<6);
+			PORTD = PORTD | (1<<7);
 		}
 		
 		/*
@@ -661,3 +687,28 @@ void handle_game_over()
 	
 	start_screen();
 }
+
+/*
+ISR(TIMER1_COMPA_vect) {
+	//Display the number to the SSD
+	//change displayed digit,
+	//seven_seg_cc = 1 ^ seven_seg_cc;
+	
+	if (points < 0) {
+		;
+	}
+	
+	
+	if ((points <= 9) && (points >=0)) {
+		//display on SSD points
+		PORTC = seven_seg_data[points];
+			
+	} else if ((points >= -9) && (points <= -1)) {
+		;
+	}
+	
+	//change displayed digit,
+	seven_seg_cc = 1 ^ seven_seg_cc;
+	
+}
+*/

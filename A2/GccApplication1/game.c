@@ -70,13 +70,9 @@ void update_combo() {
 	if (combo_count >= 10) {
 		printf("Combo Count:  %d", combo_count);
 		
-	} else if (combo_count >= 100) {
-		printf("Combo Count: %d", combo_count);
-		
 	} else {
 		printf("Combo Count:   %d", combo_count);
 	}
-	
 	
 	//update combo check accordingly
 	if (combo_count >= 3) {
@@ -140,11 +136,13 @@ void play_note(uint8_t lane)
 				combo_count = 0;
 				
 			} else if (col == 13) {
+				combo_count++;
+				
 				if (combo_count > 3) {
 					points += 4;
 				} else {
 					points += 3;
-					combo_count++;
+					
 				}
 			}
 			
@@ -163,6 +161,15 @@ void play_note(uint8_t lane)
 // Advance the notes one row down the display
 void advance_note(void)
 {
+	//if the user has a high combo score, set all notes to orange
+	PixelColour dark_colour = COLOUR_DARK_RED;
+	PixelColour color = COLOUR_RED;
+	
+	if (combo_check) {
+		dark_colour = COLOUR_DARK_ORANGE;
+		color = COLOUR_ORANGE;
+	}
+	
 	
 	// remove all the current notes; reverse of below
 	for (uint8_t col=0; col<MATRIX_NUM_COLUMNS; col++)
@@ -194,20 +201,20 @@ void advance_note(void)
 		{
 			//check if the next note is in the appropriate lane
 			if ((ghost_note == 0x01) & (lane == 0)) {
-				ledmatrix_update_pixel(0, 2*lane, COLOUR_DARK_RED);
-				ledmatrix_update_pixel(0, 2*lane + 1, COLOUR_DARK_RED);
+				ledmatrix_update_pixel(0, 2*lane, dark_colour);
+				ledmatrix_update_pixel(0, 2*lane + 1, dark_colour);
 				
 			} else if ((ghost_note == 0x02) & (lane == 1)) {
-				ledmatrix_update_pixel(0, 2*lane, COLOUR_DARK_RED);
-				ledmatrix_update_pixel(0, 2*lane + 1, COLOUR_DARK_RED);
+				ledmatrix_update_pixel(0, 2*lane, dark_colour);
+				ledmatrix_update_pixel(0, 2*lane + 1, dark_colour);
 			
 			} else if ((ghost_note == 0x04) & (lane == 2)) {
-				ledmatrix_update_pixel(0, 2*lane, COLOUR_DARK_RED);
-				ledmatrix_update_pixel(0, 2*lane + 1, COLOUR_DARK_RED);
+				ledmatrix_update_pixel(0, 2*lane, dark_colour);
+				ledmatrix_update_pixel(0, 2*lane + 1, dark_colour);
 			
 			} else if ((ghost_note == 0x08) & (lane == 3)) {
-				ledmatrix_update_pixel(0, 2*lane, COLOUR_DARK_RED);
-				ledmatrix_update_pixel(0, 2*lane + 1, COLOUR_DARK_RED);
+				ledmatrix_update_pixel(0, 2*lane, dark_colour);
+				ledmatrix_update_pixel(0, 2*lane + 1, dark_colour);
 			
 			}
 				
@@ -258,6 +265,8 @@ void advance_note(void)
 		//next note in track that is coming
 		uint8_t ghost_note = track[ghost_index];
 		
+		int long_check = 0;
+		
 		// if the index is beyond the end of the track,
 		// no note can be drawn
 		if (index >= TRACK_LENGTH || (index + 1) >= TRACK_LENGTH)
@@ -268,9 +277,34 @@ void advance_note(void)
 		// iterate over the four paths
 		for (uint8_t lane=0; lane<4; lane++)
 		{									
+			
+			uint8_t current_note = track[index];
+			
+			/* check to see if in a long note logic
+			//check if at the start of a long note
+			if (current_note == current_note>>4) {
+				long_check = 1;
+			
+			//check if in the middle of long note
+			} else if ((long_check) && (track[index + 1] == current_note)) {
+				continue; 
+			//check if at the end of long note
+			} else if ((long_check) && (track[index + 1] != track[index - 1])) {
+				continue;
+			
+			//else outside long note.
+			} else {
+				long_check = 0;
 				
+			}
+			
+			if (long_check) {
+				current_note = current_note>>4;
+			}
+			*/
+			
 			//check if there's a note in the specific path
-			if (track[index] & (1<<lane)) {
+			if (current_note & (1<<lane)) {
 				
 				//check if theres a note in the led matrix section
 				if ((green_check == lane) & ((col >= 11) & (col <= 15))) {
@@ -278,9 +312,9 @@ void advance_note(void)
 					ledmatrix_update_pixel(col, 2*lane, COLOUR_GREEN);
 					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_GREEN);
 				
-				} else if (ghost_note != track[index]) {					
-					ledmatrix_update_pixel(col, 2*lane, COLOUR_RED);
-					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_RED);
+				} else if (ghost_note != current_note) {					
+					ledmatrix_update_pixel(col, 2*lane, color);
+					ledmatrix_update_pixel(col, 2*lane+1, color);
 					
 					//if note slides off screen and green_check isn't checked to a lane
 					if (col == 15) {
@@ -294,8 +328,8 @@ void advance_note(void)
 					}
 					
 				} else {
-					ledmatrix_update_pixel(col, 2*lane, COLOUR_RED);
-					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_RED);	
+					ledmatrix_update_pixel(col, 2*lane, color);
+					ledmatrix_update_pixel(col, 2*lane+1, color);	
 					
 					//if note slides off screen and green_check isn't checked to a lane
 					if (col == 15) {
