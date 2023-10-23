@@ -155,6 +155,9 @@
     <Compile Include="game.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="project.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="ledmatrix.c">
       <SubType>compile</SubType>
     </Compile>

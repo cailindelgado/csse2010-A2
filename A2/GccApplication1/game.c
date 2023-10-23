@@ -280,7 +280,6 @@ void advance_note(void)
 			
 			uint8_t current_note = track[index];
 			
-			/* check to see if in a long note logic
 			//check if at the start of a long note
 			if (current_note == current_note>>4) {
 				long_check = 1;
@@ -301,7 +300,6 @@ void advance_note(void)
 			if (long_check) {
 				current_note = current_note>>4;
 			}
-			*/
 			
 			//check if there's a note in the specific path
 			if (current_note & (1<<lane)) {

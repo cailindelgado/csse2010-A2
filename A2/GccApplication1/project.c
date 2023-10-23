@@ -25,6 +25,7 @@
 #include "timer0.h"
 #include "timer1.h"
 #include "timer2.h"
+#include "project.h"
 
 // Function prototypes - these are defined below (after main()) in the order
 // given here
@@ -39,11 +40,19 @@ uint16_t game_speed;
 //is manual on?	
 int man_mode = 0;
 
+
 //is the game paused?
 int paused = 0;
 
-//SSD numbers 
+//Seven segment display digit being displayed
+volatile int seven_seg_cc = 0;
+
+//basically if (side_check) ? #display left : #display right
+//int side_check = 0;
+
+//seven segment display segment values for 0 to 9
 uint8_t seven_seg_data[10] = {63,6,91,79,102,109,125,7,127,111};
+
 	
 /////////////////////////////// main //////////////////////////////////
 int main(void)
@@ -236,16 +245,16 @@ void display_countdown(int countdown) {
 	switch (countdown) {
 		case 1: //Then draw the 1
 			for (uint8_t col = 4; col < 11; col++) {
-				ledmatrix_update_pixel(col, 3, COLOUR_RED);
-				ledmatrix_update_pixel(col, 4, COLOUR_RED);
+				ledmatrix_update_pixel(col, 3, COLOUR_YELLOW);
+				ledmatrix_update_pixel(col, 4, COLOUR_YELLOW);
 				
 				if (col == 5) {
-					ledmatrix_update_pixel(col, 2, COLOUR_RED);
-					ledmatrix_update_pixel(col, 4, COLOUR_RED);
+					ledmatrix_update_pixel(col, 2, COLOUR_YELLOW);
+					ledmatrix_update_pixel(col, 4, COLOUR_YELLOW);
 					
 					} else if (col == 10) {
-					ledmatrix_update_pixel(col, 2, COLOUR_RED);
-					ledmatrix_update_pixel(col, 5, COLOUR_RED);
+					ledmatrix_update_pixel(col, 2, COLOUR_YELLOW);
+					ledmatrix_update_pixel(col, 5, COLOUR_YELLOW);
 					
 				}
 			}
@@ -286,25 +295,25 @@ void display_countdown(int countdown) {
 		case 3: //Then draw the 3
 			for (uint8_t col = 4; col < 11; col ++) {
 				if (col == 4 || col == 10) {
-					ledmatrix_update_pixel(col, 2, COLOUR_YELLOW);
-					ledmatrix_update_pixel(col, 3, COLOUR_YELLOW);
-					ledmatrix_update_pixel(col, 4, COLOUR_YELLOW);
-					ledmatrix_update_pixel(col, 5, COLOUR_YELLOW);
+					ledmatrix_update_pixel(col, 2, COLOUR_RED);
+					ledmatrix_update_pixel(col, 3, COLOUR_RED);
+					ledmatrix_update_pixel(col, 4, COLOUR_RED);
+					ledmatrix_update_pixel(col, 5, COLOUR_RED);
 					
 					} else if (col == 5 || col == 9) {
-					ledmatrix_update_pixel(col, 1, COLOUR_YELLOW);
-					ledmatrix_update_pixel(col, 2, COLOUR_YELLOW);
-					ledmatrix_update_pixel(col, 5, COLOUR_YELLOW);
-					ledmatrix_update_pixel(col, 6, COLOUR_YELLOW);
+					ledmatrix_update_pixel(col, 1, COLOUR_RED);
+					ledmatrix_update_pixel(col, 2, COLOUR_RED);
+					ledmatrix_update_pixel(col, 5, COLOUR_RED);
+					ledmatrix_update_pixel(col, 6, COLOUR_RED);
 					
 					} else if (col == 6 || col == 8) {
-					ledmatrix_update_pixel(col, 5, COLOUR_YELLOW);
-					ledmatrix_update_pixel(col, 6, COLOUR_YELLOW);
+					ledmatrix_update_pixel(col, 5, COLOUR_RED);
+					ledmatrix_update_pixel(col, 6, COLOUR_RED);
 					
 					} else {
-					ledmatrix_update_pixel(col, 2, COLOUR_YELLOW);
-					ledmatrix_update_pixel(col, 3, COLOUR_YELLOW);
-					ledmatrix_update_pixel(col, 4, COLOUR_YELLOW);
+					ledmatrix_update_pixel(col, 2, COLOUR_RED);
+					ledmatrix_update_pixel(col, 3, COLOUR_RED);
+					ledmatrix_update_pixel(col, 4, COLOUR_RED);
 				}
 			}
 			break;
@@ -350,7 +359,7 @@ void game_countdown() {
 	uint32_t current_time = get_current_time();
 	uint32_t last_recorded_time = current_time;
 
-	display_countdown(1); // display 1
+	display_countdown(3); // display 1
 	
 	while (1) {
 		//update current time
@@ -370,7 +379,7 @@ void game_countdown() {
 		
 		//if the change in time between the 1 being drawn hits 2 * game speed
 		if ((current_time - last_recorded_time) >= (2 * game_speed)) {
-			display_countdown(3); //display 3
+			display_countdown(1); //display 3
 			
 			last_recorded_time = current_time;
 			break;
@@ -402,6 +411,46 @@ void game_countdown() {
 	}
 }
 
+void ssd_display() {
+	//SSD section  //maybe put into the interrupt section
+	//change displayed digit,
+	
+	if (seven_seg_cc) {
+		PORTD = PORTD | (1<<2);
+	} else {
+		PORTD = PORTD & 0b11111011;
+	}
+	
+	if ((points <= 9) && (points >=0)) {
+		//side_check = 0;
+		
+		//display on SSD points
+		PORTC = seven_seg_data[points];
+		
+	} else if ((points > 9) && (points < 100)) {
+		//leftmost number appears on left of ssd and rightmost on the right
+		PORTC = seven_seg_data[points];
+		seven_seg_cc ^= 1; //make so that it outputs high to the 
+		PORTC = seven_seg_data[points];
+		
+	} else if ((points >= 100)) {
+		//only display right most two parts like above
+		;
+		
+	} else if ((points < 0) && (points > -10)) {
+		//the negative appears in left side of ssd and number on right
+		PORTC = seven_seg_data[0 - points]; //
+		seven_seg_cc ^= 1;
+		//PORTC = 64;
+		
+	} else if (points <= -10) {
+		//ssd displays "--"
+		PORTC = 64;
+		seven_seg_cc ^= 1;
+
+	}
+}
+
 void new_game(void)
 {
 	// Clear the serial terminal
@@ -429,13 +478,13 @@ void play_game(void)
 	
 	int8_t btn; // The button pushed
 	
-	//int combo_line = 0;
+	int combo_line = 0;
 	
 	last_advance_time = get_current_time();
 	
 	//Display current track
 	move_terminal_cursor(10, 15);
-	printf("Track: Through Fire & Flames");																//do %s and add a new track title at the end.
+	printf("Track: Through Fire & Flames");													//do %s and add a new track title at the end.
 	
 	move_terminal_cursor(10, 18);
 	clear_to_end_of_line();
@@ -523,29 +572,6 @@ void play_game(void)
 			}
 		}
 		
-		//SSD section  //maybe put into the interrupt section
-		if ((points <= 9) && (points >=0)) {
-			//display on SSD points
-			PORTC = seven_seg_data[points];
-				
-		} else if ((points > 9) && (points < 100)) {
-		//leftmost number appears on left of ssd and rightmost on the right
-			;
-			
-		} else if ((points >= 100)) {
-			//only display right most two parts like above 
-			;
-			
-		} else if ((points < 0) && (points > -10)) {
-			//the negative appears in left side of ssd and number on right	
-			;
-				
-		} else if (points <= -10) {
-			//ssd displays "--"
-			;
-			
-		} 
-		
 		//Combo IO board LED's
 		if (combo_count == 0) {
 			//set portD outputs to the I/O boards LED matrix to be 0
@@ -564,8 +590,7 @@ void play_game(void)
 			PORTD = PORTD | (1<<7);
 		}
 		
-		/*
-		//Combo display																			//WHY DOES IT SLOW DOWN THE 'n' feature of manual mode.
+		//Combo display
 		if ((combo_check) && (combo_line == 0)) {
 			move_terminal_cursor(10, 3);
 			printf("  ______                           __                  __");
@@ -620,7 +645,6 @@ void play_game(void)
 				
 			}
 		}
-		*/
 		
 		if (!man_mode & !paused) {
 			current_time = get_current_time();
@@ -652,7 +676,7 @@ void handle_game_over()
 	printf("Final Score: %d\n", points);
 	//Display current track
 	move_terminal_cursor(10, 15);
-	printf("Track: Through Fire & Flames");																//do %s and add a new track title at the end.
+	printf("Track: Through Fire & Flames");														//do %s and add a new track title at the end.
 	move_terminal_cursor(10, 16);
 	clear_to_end_of_line();
 	//display game sped
@@ -687,28 +711,3 @@ void handle_game_over()
 	
 	start_screen();
 }
-
-/*
-ISR(TIMER1_COMPA_vect) {
-	//Display the number to the SSD
-	//change displayed digit,
-	//seven_seg_cc = 1 ^ seven_seg_cc;
-	
-	if (points < 0) {
-		;
-	}
-	
-	
-	if ((points <= 9) && (points >=0)) {
-		//display on SSD points
-		PORTC = seven_seg_data[points];
-			
-	} else if ((points >= -9) && (points <= -1)) {
-		;
-	}
-	
-	//change displayed digit,
-	seven_seg_cc = 1 ^ seven_seg_cc;
-	
-}
-*/
