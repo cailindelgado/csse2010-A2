@@ -13,6 +13,7 @@
 #include "display.h"
 #include "ledmatrix.h"
 #include "terminalio.h"
+#include "timer1.h"
 
 static const uint8_t track[TRACK_LENGTH] = {0x00,
 	0x00, 0x00, 0x08, 0x08, 0x08, 0x80, 0x04, 0x02,
@@ -84,6 +85,63 @@ void update_combo() {
 	}
 }
 
+//play the note sound
+void sound_note(int lane, int col) {
+	/*
+	move_terminal_cursor(10, 18);
+	clear_to_end_of_line();
+	printf("current lane: %d", lane);
+	*/
+	if (lane == -1 && col == -1) {
+		//turn off buzzer
+		freq = 1;
+		duty_cycle = 0;
+	}
+	
+	if (lane == 3) {
+		freq = 784;
+		
+	} else if (lane == 2) {
+		freq = 698;
+		
+	} else if (lane == 1) {
+		freq = 622;
+		
+	} else if (!lane) {
+		freq = 523;
+	}
+	/*
+	move_terminal_cursor(10, 19);
+	clear_to_end_of_line();
+	printf("current column: %d", col);
+	*/
+	//set duty cycle appropriately
+	if (col == 11) {
+		duty_cycle = 2;
+		
+	} else if (col == 12) {
+		duty_cycle = 10;
+		
+	} else if (col == 13) {
+		duty_cycle = 50;
+		
+	} else if (col == 14) {
+		duty_cycle = 90;
+		
+	} else if (col == 15) {
+		duty_cycle = 98;
+		
+	}
+	
+	note_sound();
+	/*
+	move_terminal_cursor(10, 20);
+	clear_to_end_of_line();
+	printf("Button Pushed, Duty cycle set to %f and frequency set to %d Hz", duty_cycle, freq);
+	*/
+}
+
+
 // Initialize the game by resetting the grid and beat
 void initialise_game(void)
 {
@@ -130,14 +188,16 @@ void play_note(uint8_t lane)
 			if (col == 11 || col == 15) {
 				points++;
 				combo_count = 0;
+				sound_note(lane, col);
 				
 			} else if (col == 12 || col == 14) {
 				points += 2;
 				combo_count = 0;
+				sound_note(lane, col);
 				
 			} else if (col == 13) {
 				combo_count++;
-				//sound_note(lane, col);
+				sound_note(lane, col);
 				
 				if (combo_count > 3) {
 					points += 4;
@@ -171,6 +231,11 @@ void advance_note(void)
 		color = COLOUR_ORANGE;
 	}
 	
+	
+	if (advance_count == 5) {
+		sound_note(-1, -1);
+		advance_count = 0;
+	}
 	
 	// remove all the current notes; reverse of below
 	for (uint8_t col=0; col<MATRIX_NUM_COLUMNS; col++)
@@ -347,9 +412,9 @@ void advance_note(void)
 					green_check = -1;
 				}
 				
-								
 			}
 		}
+		
 	}
 }
 

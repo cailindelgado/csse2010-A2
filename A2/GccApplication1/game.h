@@ -43,4 +43,7 @@ uint16_t freq;
 //duty cycle of PWM in %
 float duty_cycle;
 
+//see if advance note is run 5 times or not
+int advance_count;
+
 #endif

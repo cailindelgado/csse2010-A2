@@ -79,7 +79,7 @@ void initialise_hardware(void)
 	
 	//Make all bits of port C and the upper 5 bits of port D to be output bits
 	DDRC = 0xFF; //0xFF => 0b11111111
-	DDRD = 0xFC; //0xFC => 0b11111100		
+	DDRD = 0xFC; //0xFC => 0b11111100	
 	
 	// Setup serial port for 19200 baud communication with no echo
 	// of incoming characters
@@ -410,38 +410,48 @@ void game_countdown() {
 void ssd_display() {
 	//SSD section  //maybe put into the interrupt section
 	//change displayed digit,
-	int left_digit = 0;
+	int left_digit = points;
 	int right_digit = 0;
 	
-	if ((points > 9) && (points < 100)) {
-		left_digit = points	/ 10; // tens column
-		right_digit = points % 10; //ones column
+	if (!((points < 10) && (points >= 0))) {
+		if ((points > 9) && (points < 100)) {
+			left_digit = points	/ 10; // tens column
+			right_digit = points % 10; //ones column
 		
-	} else if ((points >= 100)) {
-		left_digit = points /10 % 10; //tens column
-		right_digit = points % 10;
-		
-	} else if ((points < 0) && (points > -10)) {
-		right_digit = -1 * points;
-		left_digit = 10;
+		} else if ((points >= 100)) {
+			left_digit = points /10 % 10; //tens column
+			right_digit = points % 10;
+			
+		} else if ((points < 0) && (points > -10)) {
+			right_digit = -1 * points;
+			left_digit = 10;
 	
-	} else if (points <= -10) {
-		//SSD displays "--"
-		right_digit = 10;
-		left_digit = 10;
-	}
+		} else if (points <= -10) {
+			//SSD displays "--"
+			right_digit = 10;
+			left_digit = 10;
+		}
 	
-	if (seven_seg_cc) { //is seven_seg_cc, then ssd displays to the left
-		PORTD = PORTD | (1<<2);	
-		PORTC = seven_seg_data[left_digit];
+		if (seven_seg_cc) { //is seven_seg_cc, then ssd displays to the left
+			PORTD = PORTD | (1<<2);	
+			PORTC = seven_seg_data[left_digit];
 		
-		seven_seg_cc ^= 1;
+			seven_seg_cc ^= 1;
+		
+		} else {
+			PORTD = PORTD & 0b11111011;				//Display Right digit
+			PORTC = seven_seg_data[right_digit];
+			
+			seven_seg_cc ^= 1;
+		}
 		
 	} else {
-		PORTD = PORTD & 0b11111011;				//Display Right digit
-		PORTC = seven_seg_data[right_digit];
+		if (seven_seg_cc) {
+			PORTC = seven_seg_data[left_digit];
+		} else {
+			seven_seg_cc ^= 1;
+		}
 		
-		seven_seg_cc ^= 1;
 	}
 }
 
@@ -512,23 +522,25 @@ void play_game(void)
 			keyboard_input = fgetc(stdin);
 		}
 		
-		if ((btn == BUTTON0_PUSHED) || (keyboard_input == 'f' || keyboard_input == 'F')) {
-			// If button 0 play the lowest note (right lane)
-			play_note(3);
+		if (!paused) {
+			if ((btn == BUTTON0_PUSHED) || (keyboard_input == 'f' || keyboard_input == 'F')) {
+				// If button 0 play the lowest note (right lane)
+				play_note(3);
 		
-		} else if ((btn == BUTTON1_PUSHED) || (keyboard_input == 'd' || keyboard_input == 'D')) {
-			//If button 1 is pushed play the second lowest note
-			play_note(2);		
+			} else if ((btn == BUTTON1_PUSHED) || (keyboard_input == 'd' || keyboard_input == 'D')) {
+				//If button 1 is pushed play the second lowest note
+				play_note(2);		
 		
-		} else if ((btn == BUTTON2_PUSHED) || (keyboard_input == 's' || keyboard_input == 'S')) {
-			//If button 2 is pushed play the second highest note
-			play_note(1); 
+			} else if ((btn == BUTTON2_PUSHED) || (keyboard_input == 's' || keyboard_input == 'S')) {
+				//If button 2 is pushed play the second highest note
+				play_note(1); 
+				
+			} else if ((btn == BUTTON3_PUSHED) || (keyboard_input == 'a' || keyboard_input == 'A')) {
+				//If button 3 is pushed play the highest note
+				play_note(0);
 			
-		} else if ((btn == BUTTON3_PUSHED) || (keyboard_input == 'a' || keyboard_input == 'A')) {
-			//If button 3 is pushed play the highest note
-			play_note(0);
-			
-		} 
+			} 
+		}
 		
 		if (keyboard_input == 'm' || keyboard_input == 'M') {
 			//check to see if the game is currently paused
@@ -655,6 +667,7 @@ void play_game(void)
 				// 200ms (0.2 second) has passed since the last time we advance the
 				// notes here, so update the advance the notes
 				advance_note();
+				advance_count++;
 				
 				// Update the most recent time the notes were advanced
 				last_advance_time = current_time;
@@ -663,6 +676,7 @@ void play_game(void)
 		} else if (man_mode) {
 			if (keyboard_input == 'n' || keyboard_input == 'N') {
 				advance_note();
+				advance_count++;
 			}
 		}
 	}
