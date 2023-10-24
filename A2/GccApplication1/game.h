@@ -37,4 +37,10 @@ int combo_count;
 //check if the combo is above or equal to 3
 int combo_check;
 
+//frequency of PWM in Hz
+uint16_t freq;
+
+//duty cycle of PWM in %
+float duty_cycle;
+
 #endif

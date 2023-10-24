@@ -30,7 +30,6 @@ void init_timer2(void)
 	
 	// Turn on global interrupts
 	sei();
-	
 }
 
 ISR(TIMER2_COMPA_vect) {

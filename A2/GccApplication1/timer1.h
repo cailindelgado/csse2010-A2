@@ -9,7 +9,7 @@
 #ifndef TIMER1_H_
 #define TIMER1_H_
 
-#include "project.h"
+#include "game.h"
 #include <stdint.h>
 
 /* Set up our timer 

@@ -39,6 +39,7 @@ uint16_t beat;
 uint8_t green_check = - 1; 
 uint8_t game_over = 0;
 
+//updates the points in the terminal
 void update_points() {
 	//clear terminal line and reprint the game score with the points
 	move_terminal_cursor(10, 13);
@@ -61,6 +62,7 @@ void update_points() {
 	}
 }
 
+//updates the combo points in the terminal
 void update_combo() {
 	//Clear terminal line and reprint the combo count
 	move_terminal_cursor(10, 14);
@@ -82,7 +84,6 @@ void update_combo() {
 	}
 }
 
-
 // Initialize the game by resetting the grid and beat
 void initialise_game(void)
 {
@@ -94,7 +95,6 @@ void initialise_game(void)
 	update_points();
 	update_combo();
 }
-
 
 // Play a note in the given lane
 void play_note(uint8_t lane)
@@ -137,6 +137,7 @@ void play_note(uint8_t lane)
 				
 			} else if (col == 13) {
 				combo_count++;
+				//sound_note(lane, col);
 				
 				if (combo_count > 3) {
 					points += 4;
