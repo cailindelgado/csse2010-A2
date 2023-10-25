@@ -130,6 +130,9 @@ void sound_note(int lane, int col) {
 	note_sound();
 }
 
+void draw_notes() {
+	; //sets red pixels to be orange and dark red to be dark orange.
+}
 
 // Initialize the game by resetting the grid and beat
 void initialise_game(void)

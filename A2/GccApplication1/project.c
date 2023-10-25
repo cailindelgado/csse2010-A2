@@ -657,7 +657,7 @@ void play_game(void)
 				move_terminal_cursor(10, term_line);
 				clear_to_end_of_line();
 				
-			}
+			}	
 		}
 		
 
@@ -678,8 +678,8 @@ void play_game(void)
 		} else if (man_mode) {
 			if (keyboard_input == 'n' || keyboard_input == 'N') {
 				advance_note();
-				
 			}
+			draw_notes();
 		}
 	}
 }

@@ -16,6 +16,8 @@
 
 #define TRACK_LENGTH 129
 
+
+//functions
 // Initialize the game by resetting the grid and beat
 void initialise_game(void);
 
@@ -25,6 +27,9 @@ void play_note(uint8_t lane);
 // Advance the notes one row down the display
 void advance_note(void);
 
+void draw_notes();
+
+//global variables
 // Returns 1 if the game is over, 0 otherwise.
 uint8_t is_game_over(void);
 

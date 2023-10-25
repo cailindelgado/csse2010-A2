@@ -79,16 +79,6 @@ void pause_control(int is_paused) {
 		
 	} else {
 		note_sound();
-		/*
-		DDRD |= 0b00010000;
-		PORTD |= 0b00010000;
-		
-		uint16_t clockperiod = (1000000UL / freq);
-		uint16_t pulsewidth = (duty_cycle * clockperiod)/100;
-		
-		OCR1A = clockperiod - 1;
-		OCR1B = pulsewidth - 1;
-		*/
 	}
 	
 }
