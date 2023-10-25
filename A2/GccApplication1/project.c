@@ -48,6 +48,10 @@ volatile int seven_seg_cc = 0;
 
 //seven segment display segment values for 0 to 9
 uint8_t seven_seg_data[11] = {63,6,91,79,102,109,125,7,127,111,64};
+	
+//variables for saving last frequency and duty cycle 
+uint16_t back_up_f = 0;
+float back_up_dc = 0;
 
 	
 /////////////////////////////// main //////////////////////////////////
@@ -224,11 +228,7 @@ void start_screen(void)
 				update_start_screen(frame_number);
 				frame_number = (frame_number + 1) % 32;
 				last_screen_update = current_time;
-			} else {
-				if (serial_input == 'n' || serial_input == 'N') {
-					advance_note();
-				}
-			}
+			} 
 		}
 	}
 }
@@ -455,6 +455,18 @@ void ssd_display() {
 	}
 }
 
+void pause_sound(int is_paused) {
+	//checker is 1 when game is paused
+	if (is_paused) {
+		back_up_f = freq;
+		back_up_dc = duty_cycle;
+		disable_piezzo = 1; //if 1 then sound off
+		
+	} else {
+		disable_piezzo = 0;
+	}
+}
+
 void new_game(void)
 {
 	// Clear the serial terminal
@@ -569,12 +581,18 @@ void play_game(void)
 				if (paused) {
 					paused = 0;
 					PORTD = PORTD & 0b11110111;
+					
+					//un-pause sound
+					pause_sound(paused);
 			
 				} else {
 					paused = 1;
 					pause_time = get_current_time() - last_advance_time; 
 					
 					PORTD = PORTD | (1<<3); //essentially just PORTD | 0b00001000
+					
+					//pause sound
+					pause_sound(paused);
 					
 					//tell user that game is currently paused
 					printf("Game Paused");
@@ -667,7 +685,6 @@ void play_game(void)
 				// 200ms (0.2 second) has passed since the last time we advance the
 				// notes here, so update the advance the notes
 				advance_note();
-				advance_count++;
 				
 				// Update the most recent time the notes were advanced
 				last_advance_time = current_time;
@@ -676,7 +693,7 @@ void play_game(void)
 		} else if (man_mode) {
 			if (keyboard_input == 'n' || keyboard_input == 'N') {
 				advance_note();
-				advance_count++;
+				
 			}
 		}
 	}

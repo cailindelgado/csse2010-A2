@@ -46,4 +46,7 @@ float duty_cycle;
 //see if advance note is run 5 times or not
 int advance_count;
 
+//dis-ables the peizzo buzzer
+int disable_piezzo;
+
 #endif

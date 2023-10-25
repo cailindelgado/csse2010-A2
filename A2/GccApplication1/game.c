@@ -87,17 +87,15 @@ void update_combo() {
 
 //play the note sound
 void sound_note(int lane, int col) {
-	/*
-	move_terminal_cursor(10, 18);
-	clear_to_end_of_line();
-	printf("current lane: %d", lane);
-	*/
+	
 	if (lane == -1 && col == -1) {
 		//turn off buzzer
-		freq = 1;
-		duty_cycle = 0;
+		disable_piezzo = 1;
+	} else {
+		disable_piezzo = 0;
 	}
 	
+	//set frequency appropriately
 	if (lane == 3) {
 		freq = 784;
 		
@@ -110,11 +108,7 @@ void sound_note(int lane, int col) {
 	} else if (!lane) {
 		freq = 523;
 	}
-	/*
-	move_terminal_cursor(10, 19);
-	clear_to_end_of_line();
-	printf("current column: %d", col);
-	*/
+
 	//set duty cycle appropriately
 	if (col == 11) {
 		duty_cycle = 2;
@@ -134,11 +128,6 @@ void sound_note(int lane, int col) {
 	}
 	
 	note_sound();
-	/*
-	move_terminal_cursor(10, 20);
-	clear_to_end_of_line();
-	printf("Button Pushed, Duty cycle set to %f and frequency set to %d Hz", duty_cycle, freq);
-	*/
 }
 
 
@@ -150,6 +139,8 @@ void initialise_game(void)
 	
 	beat = 0;
 	game_over = 0;
+	advance_count = 0;
+	
 	update_points();
 	update_combo();
 }
@@ -231,11 +222,12 @@ void advance_note(void)
 		color = COLOUR_ORANGE;
 	}
 	
-	
-	if (advance_count == 5) {
+	if (advance_count >= 5) {
 		sound_note(-1, -1);
 		advance_count = 0;
 	}
+	
+	advance_count++;
 	
 	// remove all the current notes; reverse of below
 	for (uint8_t col=0; col<MATRIX_NUM_COLUMNS; col++)
@@ -308,6 +300,10 @@ void advance_note(void)
 				ledmatrix_update_pixel(col, 2*lane+1, colour);
 			}
 		}
+		//check if the current note goes off the screen
+		if (col >= 15) {
+			green_check = -1;
+		}
 	}
 	
 	// increment the beat
@@ -371,7 +367,7 @@ void advance_note(void)
 			if (current_note & (1<<lane)) {
 				
 				//check if theres a note in the led matrix section
-				if ((green_check == lane) & ((col >= 11) & (col <= 15))) {
+				if ((green_check == lane) && ((col >= 11) && (col <= 15))) {
 					//if true set pixels to green
 					ledmatrix_update_pixel(col, 2*lane, COLOUR_GREEN);
 					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_GREEN);
@@ -406,11 +402,6 @@ void advance_note(void)
 						}			
 					}
 				} 
-				
-				//check if the current note goes off the screen
-				if (col >= 15) {
-					green_check = -1;
-				}
 				
 			}
 		}

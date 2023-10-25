@@ -46,9 +46,25 @@ void init_timer1(void)
 
 void note_sound() {
 	
-	uint16_t clockperiod = (1000000UL / freq);
-	uint16_t pulsewidth = (duty_cycle * clockperiod)/100;
+	if (!disable_piezzo) {
+		DDRD |= 0b00010000;
+		PORTD |= 0b00010000;
+		
+		uint16_t clockperiod = (1000000UL / freq);
+		uint16_t pulsewidth = (duty_cycle * clockperiod)/100;
 	
-	OCR1A = clockperiod - 1;
-	OCR1B = pulsewidth - 1;
+		OCR1A = clockperiod - 1;
+		OCR1B = pulsewidth - 1;
+		
+		
+		
+	} else {
+		OCR1A = 0;
+		OCR1B = 0;
+		
+		DDRD &= ~(1<<4);	//inverse of 1<<4
+		PORTD &= 0b11101111;
+		
+		
+	}
 }
