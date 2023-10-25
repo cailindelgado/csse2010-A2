@@ -212,7 +212,6 @@ void play_note(uint8_t lane)
 		}	
 }
 	
-
 // Advance the notes one row down the display
 void advance_note(void)
 {
@@ -257,7 +256,8 @@ void advance_note(void)
 		if ((future+beat) % 5)
 		{
 			continue;
-		}
+		} 
+		
 		for (uint8_t lane = 0; lane < 4; lane++)
 		{
 			//check if the next note is in the appropriate lane
@@ -317,11 +317,20 @@ void advance_note(void)
 	{
 		// col counts from one end, future from the other
 		uint8_t future = MATRIX_NUM_COLUMNS-1-col;
+		
+		//is 1 if there is a long note, else 0
+		int long_check = 0;
+		
 		// notes are only drawn every five columns
-		if ((future+beat)%5)
+		if ((future+beat)%5)															//Long note has something to do with this
 		{
-			continue;
-		}
+			if (long_check) {
+				;
+			} else {
+				 continue;
+			}
+			
+		} 
 		
 		// index of which note in the track to play
 		uint8_t index = (future+beat)/5;
@@ -329,8 +338,6 @@ void advance_note(void)
 		uint8_t ghost_index = ((MATRIX_NUM_COLUMNS - 1) + beat)/5;
 		//next note in track that is coming
 		uint8_t ghost_note = track[ghost_index];
-		
-		int long_check = 0;
 		
 		// if the index is beyond the end of the track,
 		// no note can be drawn
@@ -352,6 +359,7 @@ void advance_note(void)
 			//check if in the middle of long note
 			} else if ((long_check) && (track[index + 1] == current_note)) {
 				continue; 
+			
 			//check if at the end of long note
 			} else if ((long_check) && (track[index + 1] != track[index - 1])) {
 				continue;

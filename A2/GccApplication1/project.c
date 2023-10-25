@@ -465,7 +465,7 @@ void new_game(void)
 	combo_count = 0;
 	
 	//Start Game Countdown
-	game_countdown();
+	//game_countdown();																	////////////////////////////////////////////////////////////////////////// uncomment this
 		
 	// Initialize the game and display
 	initialise_game();
