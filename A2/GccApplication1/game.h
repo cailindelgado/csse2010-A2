@@ -27,7 +27,10 @@ void play_note(uint8_t lane);
 // Advance the notes one row down the display
 void advance_note(void);
 
+//updates the LED matrix colors appropriately
 void draw_notes();
+
+void set_track(int track_number);
 
 //global variables
 // Returns 1 if the game is over, 0 otherwise.
@@ -53,5 +56,10 @@ int advance_count;
 
 //dis-ables the peizzo buzzer
 int disable_piezzo;
+
+//track number to be displayed
+int track_no;
+
+char track_name[25];
 
 #endif

@@ -49,11 +49,6 @@ volatile int seven_seg_cc = 0;
 //seven segment display segment values for 0 to 9
 uint8_t seven_seg_data[11] = {63,6,91,79,102,109,125,7,127,111,64};
 	
-//variables for saving last frequency and duty cycle 
-uint16_t back_up_f = 0;
-float back_up_dc = 0;
-
-	
 /////////////////////////////// main //////////////////////////////////
 int main(void)
 {
@@ -131,16 +126,17 @@ void start_screen(void)
 	// to be pushed or a serial input of 's'
 	show_start_screen();
 	
+	set_track(0);
+	
 	//Display current track
 	move_terminal_cursor(10, 15);
-	printf("Track: Through Fire & Flames");															//do %s and add a new track title at the end.
+	printf("Track: %s", track_name);															//do %s and add a new track title at the end.
 
 	uint32_t last_screen_update, current_time;
 	last_screen_update = get_current_time();
 	
 	uint8_t frame_number = 0;
 	game_speed = 1000;
-	
 	
 	move_terminal_cursor(10, 17);
 	clear_to_end_of_line();
@@ -218,7 +214,22 @@ void start_screen(void)
 				//print to terminal that manual mode is on
 				printf("Manual Mode: ON");
 			}
-		} 		
+		} else if (serial_input == 't' || serial_input == 'T') { //select track
+			track_no++;
+			
+			if (track_no > 2) {
+				track_no = 0;
+			}
+			
+			
+			//sets the track and renames track_name
+			set_track(track_no);
+
+			//Display current track
+			move_terminal_cursor(10, 15);
+			clear_to_end_of_line();
+			printf("Track: %s", track_name);																//do %s and add a new track title at the end.
+		}	
 
 		if (!man_mode) {
 			// every 200 ms, update the animation
@@ -234,7 +245,6 @@ void start_screen(void)
 }
 
 void display_countdown(int countdown) {
-	
 	//clear display
 	ledmatrix_clear();
 	
@@ -394,7 +404,6 @@ void game_countdown() {
 			break;
 		}
 	}
-	
 																														//turn into a loop
 	while (1) {
 		//update current time
@@ -465,7 +474,7 @@ void new_game(void)
 	combo_count = 0;
 	
 	//Start Game Countdown
-	//game_countdown();																	////////////////////////////////////////////////////////////////////////// uncomment this
+	game_countdown();								
 		
 	// Initialize the game and display
 	initialise_game();
@@ -491,7 +500,7 @@ void play_game(void)
 	
 	//Display current track
 	move_terminal_cursor(10, 15);
-	printf("Track: Through Fire & Flames");													//do %s and add a new track title at the end.
+	printf("Track: %s", track_name);													//do %s and add a new track title at the end.
 	
 	move_terminal_cursor(10, 18);
 	clear_to_end_of_line();
@@ -693,7 +702,7 @@ void handle_game_over()
 	printf("Final Score: %d\n", points);
 	//Display current track
 	move_terminal_cursor(10, 15);
-	printf("Track: Through Fire & Flames");														//do %s and add a new track title at the end.
+	printf("Track: %s", track_name);														//do %s and add a new track title at the end.
 	move_terminal_cursor(10, 16);
 	clear_to_end_of_line();
 	//display game sped
