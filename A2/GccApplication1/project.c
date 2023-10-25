@@ -455,18 +455,6 @@ void ssd_display() {
 	}
 }
 
-void pause_sound(int is_paused) {
-	//checker is 1 when game is paused
-	if (is_paused) {
-		back_up_f = freq;
-		back_up_dc = duty_cycle;
-		disable_piezzo = 1; //if 1 then sound off
-		
-	} else {
-		disable_piezzo = 0;
-	}
-}
-
 void new_game(void)
 {
 	// Clear the serial terminal
@@ -573,32 +561,29 @@ void play_game(void)
 		}
 		
 		if (keyboard_input == 'p' || keyboard_input == 'P') {
-			//Check to see if the game is in manual mode
-			if (!man_mode) {
-				//clear pause line in terminal
-				move_terminal_cursor(10, 17);
-				clear_to_end_of_line();
-				if (paused) {
-					paused = 0;
-					PORTD = PORTD & 0b11110111;
-					
-					//un-pause sound
-					pause_sound(paused);
-			
-				} else {
-					paused = 1;
-					pause_time = get_current_time() - last_advance_time; 
-					
-					PORTD = PORTD | (1<<3); //essentially just PORTD | 0b00001000
-					
-					//pause sound
-					pause_sound(paused);
-					
-					//tell user that game is currently paused
-					printf("Game Paused");
-				}
+			//clear pause line in terminal
+			move_terminal_cursor(10, 17);
+			clear_to_end_of_line();
+			if (paused) {
+				paused = 0;
+				PORTD = PORTD & 0b11110111;
 				
+				//un-pause sound
+				pause_control(paused);
+			
+			} else {
+				paused = 1;
+				pause_time = get_current_time() - last_advance_time; 
+					
+				PORTD = PORTD | (1<<3); //essentially just PORTD | 0b00001000
+									
+				//pause the sound
+				pause_control(paused);
+					
+				//tell user that game is currently paused
+				printf("Game Paused");
 			}
+				
 		}
 		
 		//Combo IO board LED's

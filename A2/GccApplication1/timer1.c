@@ -46,7 +46,8 @@ void init_timer1(void)
 
 void note_sound() {
 	
-	if (!disable_piezzo) {
+	if (!disable_piezzo) { //if you dont want to turn off the piezzo do the following
+		//turn on PORTd4 and set DDRD4 to be output
 		DDRD |= 0b00010000;
 		PORTD |= 0b00010000;
 		
@@ -56,15 +57,38 @@ void note_sound() {
 		OCR1A = clockperiod - 1;
 		OCR1B = pulsewidth - 1;
 		
+	} else { //if you want to turn off the piezzo do the following
+		//set bot checks to be 0
+		OCR1A = 0;
+		OCR1B = 0;
 		
-		
-	} else {
+		//make DDRD4 to be input and PORTD4 to be off
+		DDRD &= ~(1<<4);	//inverse of 1<<4
+		PORTD &= 0b11101111;
+			
+	}
+}
+
+void pause_control(int is_paused) {
+	if (is_paused) {
 		OCR1A = 0;
 		OCR1B = 0;
 		
 		DDRD &= ~(1<<4);	//inverse of 1<<4
 		PORTD &= 0b11101111;
 		
+	} else {
+		note_sound();
+		/*
+		DDRD |= 0b00010000;
+		PORTD |= 0b00010000;
 		
+		uint16_t clockperiod = (1000000UL / freq);
+		uint16_t pulsewidth = (duty_cycle * clockperiod)/100;
+		
+		OCR1A = clockperiod - 1;
+		OCR1B = pulsewidth - 1;
+		*/
 	}
+	
 }

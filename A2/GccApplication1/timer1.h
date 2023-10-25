@@ -19,4 +19,7 @@ void init_timer1(void);
 //update appropriate bits and play sound
 void note_sound(void);
 
+//pause control function
+void pause_control(int is_paused);
+
 #endif /* TIMER1_H_ */
