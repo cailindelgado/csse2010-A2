@@ -24,7 +24,7 @@ void init_timer2(void)
 	
 	//enable interrupt on timer on output compare match
 	TIMSK2 = (1<<OCIE2A);
-	
+	 
 	//Ensure interrupt flag is cleared
 	TIFR2 = (1<<OCF2A);
 	

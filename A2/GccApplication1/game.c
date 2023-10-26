@@ -129,19 +129,10 @@ void sound_note(int lane, int col) {
 	}
 	
 	//set frequency appropriately
-	if (lane == 3) {
-		freq = 784;
-		
-	} else if (lane == 2) {
-		freq = 698;
-		
-	} else if (lane == 1) {
-		freq = 622;
-		
-	} else if (!lane) {
-		freq = 523;
-	}
-
+	int track_frequencies[4] = {523, 622, 698, 784};			//make into a multidimensional array
+	
+	freq = track_frequencies[lane];
+	
 	//set duty cycle appropriately
 	if (col == 11) {
 		duty_cycle = 2;
@@ -202,7 +193,7 @@ void initialise_game(void)
 }
 
 // Play a note in the given lane
-void play_note(uint8_t lane)
+void play_note(uint8_t lane)											//the colors need to be changed in this function.
 {	
 
 	for (uint8_t col = 11; col < MATRIX_NUM_COLUMNS; col++) {
@@ -221,6 +212,8 @@ void play_note(uint8_t lane)
 				
 				combo_count = 0;
 				update_combo();
+				
+				sound_note(-1,-1);
 				
 				break;
 			}
@@ -428,7 +421,6 @@ void advance_note(void)
 			//else outside long note.
 			} else {
 				long_check = 0;
-				
 			}
 			
 			if (long_check) {
