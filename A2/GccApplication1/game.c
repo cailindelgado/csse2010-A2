@@ -55,10 +55,20 @@ Track for through fire and flames -> {0x00,
 0x01, 0x10, 0x10, 0x10, 0x00, 0x00, 0x00, 0x00}
 
 Track for Someone like you -> {}
+
+Pompeii -> {0x08, 0x80, 
+	  0x08, 0x80, 
+	  0x10, 0x01, 0x01,
+	  0x02, 0x20, 0x20, 
+	  0x04, 0x40, 0x40, 
+	  0x08, 0x80, 0x80, 
+	  0x01, 0x10, 0x10, 0x10, 
+	  0x02, 0x20, 0x20, 
+	  0x04, 0x40, 0x40,}
 */
 
 uint16_t beat;
-uint8_t green_check = - 1; 
+int8_t green_check = - 1; 
 uint8_t game_over = 0;
 
 
@@ -109,6 +119,7 @@ void update_combo() {
 
 //play the note sound
 void sound_note(int lane, int col) {
+	advance_count = 0;
 	
 	if (lane == -1 && col == -1) {
 		//turn off buzzer
@@ -266,12 +277,12 @@ void advance_note(void)
 		color = COLOUR_ORANGE;
 	}
 	
+	advance_count++;
+	
 	if (advance_count >= 5) {
 		sound_note(-1, -1);
-		advance_count = 0;
 	}
 	
-	advance_count++;
 	
 	// remove all the current notes; reverse of below
 	for (uint8_t col=0; col<MATRIX_NUM_COLUMNS; col++)
@@ -323,6 +334,17 @@ void advance_note(void)
 				
 			if (track[index] & (1<<lane))
 			{
+				//if note slides off screen and green_check isn't checked to a lane
+				if (col == 15 && green_check == -1) {
+					points--;
+					update_points();
+					
+					if (combo_count != 0) {
+						combo_count = 0;
+						update_combo();
+					}
+				}
+				
 				PixelColour colour;
 				// yellows in the scoring area
 				if (col==11 || col == 15)
@@ -345,6 +367,8 @@ void advance_note(void)
 				ledmatrix_update_pixel(col, 2*lane+1, colour);
 			}
 		}
+		
+		
 		//check if the current note goes off the screen
 		if (col >= 15) {
 			green_check = -1;
@@ -363,19 +387,14 @@ void advance_note(void)
 		//is 1 if there is a long note, else 0
 		int long_check = 0;
 		
-		// notes are only drawn every five columns
-		if ((future+beat)%5)															//Long note has something to do with this
-		{
-			if (long_check) {
-				;
-			} else {
-				 continue;
-			}
-			
-		} 
-		
 		// index of which note in the track to play
 		uint8_t index = (future+beat)/5;
+		
+		// notes are only drawn every five columns
+		if ((future+beat)%5)
+		{
+			continue;
+		} 
 		
 		uint8_t ghost_index = ((MATRIX_NUM_COLUMNS - 1) + beat)/5;
 		//next note in track that is coming
@@ -428,32 +447,11 @@ void advance_note(void)
 				} else if (ghost_note != current_note) {					
 					ledmatrix_update_pixel(col, 2*lane, color);
 					ledmatrix_update_pixel(col, 2*lane+1, color);
-					
-					//if note slides off screen and green_check isn't checked to a lane
-					if (col == 15) {
-						points--;
-						update_points();		
-						
-						if (combo_count != 0) {
-							combo_count = 0;
-							update_combo();				
-						}
-					}
-					
+										
 				} else {
 					ledmatrix_update_pixel(col, 2*lane, color);
 					ledmatrix_update_pixel(col, 2*lane+1, color);	
-					
-					//if note slides off screen and green_check isn't checked to a lane
-					if (col == 15) {
-						points--;
-						update_points();		
-						
-						if (combo_count != 0) {
-							combo_count = 0;
-							update_combo();
-						}			
-					}
+
 				} 
 				
 			}
