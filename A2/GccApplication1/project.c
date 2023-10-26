@@ -703,6 +703,7 @@ void handle_game_over()
 	//Display current track
 	move_terminal_cursor(10, 15);
 	printf("Track: %s", track_name);														//do %s and add a new track title at the end.
+	track_no = 0;	
 	move_terminal_cursor(10, 16);
 	clear_to_end_of_line();
 	//display game sped
