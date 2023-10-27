@@ -20,6 +20,9 @@ void init_timer1(void)
 	freq = 1;
 	duty_cycle = 0;
 	
+	DDRD &= ~(1<<4);	//inverse of 1<<4
+	PORTD &= 0b11101111;
+	
 	uint16_t clockperiod = (1000000UL / freq);
 	uint16_t pulsewidth = (duty_cycle * clockperiod)/100;
 	
