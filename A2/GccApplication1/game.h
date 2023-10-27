@@ -48,6 +48,8 @@ int combo_check;
 //frequency of PWM in Hz
 uint16_t freq;
 
+uint16_t back_up_frequency;
+
 //duty cycle of PWM in %
 float duty_cycle;
 

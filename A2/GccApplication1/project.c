@@ -78,7 +78,11 @@ void initialise_hardware(void)
 	
 	//Make all bits of port C and the upper 5 bits of port D to be output bits
 	DDRC = 0xFF; //0xFF => 0b11111111
-	DDRD = 0xFC; //0xFC => 0b11111100	
+	DDRD = 0xFC; //0xFC => 0b11111100
+	
+	ADMUX = (1<<REFS0);
+	ADCSRA = (1<<ADEN) | (1<<ADPS2) | (1<<ADPS1);	
+	
 	
 	// Setup serial port for 19200 baud communication with no echo
 	// of incoming characters
@@ -485,6 +489,31 @@ void new_game(void)
 	clear_serial_input_buffer();
 }
 
+uint16_t joy_stick() {
+	// Start the ADC conversion
+	ADCSRA |= (1<<ADSC);
+		
+	while(ADCSRA & (1<<ADSC)) {
+			; /* Wait until conversion finished */
+		}
+	uint16_t res = ADC;
+	return res;
+}
+
+void frequency_joy(uint16_t adc_val) {
+	//back_up_frequency = freq;
+	;
+	/*if (freq > 0 && freq < 256) {
+		freq = (())
+	} */
+	
+	/*if (adc_val) {
+		move_terminal_cursor(0,0);
+		clear_to_end_of_line();
+		printf("ADC value is: %d", adc_val);
+	} */
+}
+
 void play_game(void)
 {
 	uint32_t last_advance_time, current_time;
@@ -530,6 +559,8 @@ void play_game(void)
 		if (serial_input_available()) {
 			keyboard_input = fgetc(stdin);
 		}
+		
+		frequency_joy(joy_stick());
 		
 		if (!paused) {
 			if ((btn == BUTTON0_PUSHED) || (keyboard_input == 'f' || keyboard_input == 'F')) {
