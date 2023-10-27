@@ -83,7 +83,6 @@ void initialise_hardware(void)
 	ADMUX = (1<<REFS0);
 	ADCSRA = (1<<ADEN) | (1<<ADPS2) | (1<<ADPS1);	
 	
-	
 	// Setup serial port for 19200 baud communication with no echo
 	// of incoming characters
 	init_serial_stdio(19200, 0);
@@ -690,16 +689,8 @@ void play_game(void)
 			printf("  \\$$$$$$   \\$$$$$$  \\$$  \\$$  \\$$ \\$$$$$$$   \\$$$$$$  \\$$");
 			
 			combo_line = 0;
+			combo_check = 0;
 		}
-		
-		if (!combo_check) {
-			for (int term_line = 3; term_line < 12; term_line++) {
-				move_terminal_cursor(10, term_line);
-				clear_to_end_of_line();
-				
-			}	
-		}
-		
 
 		if (!man_mode & !paused) {
 			current_time = get_current_time();

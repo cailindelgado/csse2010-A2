@@ -114,6 +114,11 @@ void update_combo() {
 		combo_check = 1;
 	} else {
 		combo_check = 0;
+		
+		for (int term_line = 3; term_line < 12; term_line++) {
+			move_terminal_cursor(10, term_line);
+			clear_to_end_of_line();
+		}
 	}
 }
 
@@ -162,7 +167,7 @@ void draw_notes() {
 	
 	PixelColour color = COLOUR_RED;
 	
-	if (combo_check) {
+	if (combo_count >= 3) {
 		color = COLOUR_ORANGE;
 	} else {
 		color = COLOUR_RED;
@@ -356,7 +361,7 @@ void advance_note(void)
 	PixelColour dark_colour = COLOUR_DARK_RED;
 	//PixelColour color = COLOUR_RED;
 	
-	if (combo_check) {
+	if (combo_count >= 3) {
 		dark_colour = COLOUR_DARK_ORANGE;
 		//color = COLOUR_ORANGE;
 	}
