@@ -159,7 +159,95 @@ void sound_note(int lane, int col) {
 }
 
 void draw_notes() {
-	; //sets red pixels to be orange and dark red to be dark orange.
+	
+	PixelColour color = COLOUR_RED;
+	
+	if (combo_check) {
+		color = COLOUR_ORANGE;
+	} else {
+		color = COLOUR_RED;
+	}
+	
+	
+	// draw the new notes
+	for (uint8_t col=0; col<MATRIX_NUM_COLUMNS; col++)
+	{
+		// col counts from one end, future from the other
+		uint8_t future = MATRIX_NUM_COLUMNS-1-col;
+		
+		//is 1 if there is a long note, else 0
+		int long_check = 0;
+		
+		// index of which note in the track to play
+		uint8_t index = (future+beat)/5;
+		
+		// notes are only drawn every five columns
+		if ((future+beat)%5)
+		{
+			continue;
+		}
+		
+		uint8_t ghost_index = ((MATRIX_NUM_COLUMNS - 1) + beat)/5;
+		//next note in track that is coming
+		uint8_t ghost_note = track[track_no][ghost_index];
+		
+		// if the index is beyond the end of the track,
+		// no note can be drawn
+		if (index >= TRACK_LENGTH || (index + 1) >= TRACK_LENGTH)
+		{
+			continue;
+		}
+		
+		// iterate over the four paths
+		for (uint8_t lane=0; lane<4; lane++)
+		{
+			
+			uint8_t current_note = track[track_no][index];
+			
+			//check if at the start of a long note
+			if (current_note == track[track_no][index + 1]>>4) {
+				long_check = 1;
+				
+				//check if in the middle of long note
+				} else if ((long_check) && (track[track_no][index + 1] == current_note)) {
+				continue;
+				
+				//check if at the end of long note
+				} else if ((long_check) && (track[index + 1] != track[index - 1])) {
+				continue;
+				
+				//else outside long note.
+				} else {
+				long_check = 0;
+			}
+			
+			if (long_check) {
+				current_note = current_note>>4;
+			}
+			
+			//check if there's a note in the specific path
+			if (track[track_no][index] & (1<<lane)) {										//track[index] replaced current_note
+				
+				//check if theres a note in the led matrix section
+				if ((green_check == lane) && ((col >= 11) && (col <= 15))) {
+					//if true set pixels to green
+					ledmatrix_update_pixel(col, 2*lane, COLOUR_GREEN);
+					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_GREEN);
+					
+					} else if (ghost_note != current_note) {
+					ledmatrix_update_pixel(col, 2*lane, color);
+					ledmatrix_update_pixel(col, 2*lane+1, color);
+					
+					} else {
+					ledmatrix_update_pixel(col, 2*lane, color);
+					ledmatrix_update_pixel(col, 2*lane+1, color);
+
+				}
+				
+			}
+		}
+		
+	}
 }
 
 //sets the track
@@ -256,6 +344,8 @@ void play_note(uint8_t lane)											//the colors need to be changed in this f
 			
 		update_points();
 		update_combo();
+		
+		draw_notes();
 		}	
 }
 	
@@ -264,11 +354,11 @@ void advance_note(void)
 {
 	//if the user has a high combo score, set all notes to orange
 	PixelColour dark_colour = COLOUR_DARK_RED;
-	PixelColour color = COLOUR_RED;
+	//PixelColour color = COLOUR_RED;
 	
 	if (combo_check) {
 		dark_colour = COLOUR_DARK_ORANGE;
-		color = COLOUR_ORANGE;
+		//color = COLOUR_ORANGE;
 	}
 	
 	advance_count++;
@@ -373,85 +463,7 @@ void advance_note(void)
 	// increment the beat
 	beat++;
 	
-	// draw the new notes
-	for (uint8_t col=0; col<MATRIX_NUM_COLUMNS; col++)
-	{
-		// col counts from one end, future from the other
-		uint8_t future = MATRIX_NUM_COLUMNS-1-col;
-		
-		//is 1 if there is a long note, else 0
-		int long_check = 0;
-		
-		// index of which note in the track to play
-		uint8_t index = (future+beat)/5;
-		
-		// notes are only drawn every five columns
-		if ((future+beat)%5)
-		{
-			continue;
-		} 
-		
-		uint8_t ghost_index = ((MATRIX_NUM_COLUMNS - 1) + beat)/5;
-		//next note in track that is coming
-		uint8_t ghost_note = track[track_no][ghost_index];
-		
-		// if the index is beyond the end of the track,
-		// no note can be drawn
-		if (index >= TRACK_LENGTH || (index + 1) >= TRACK_LENGTH)
-		{
-			continue;
-		}
-				
-		// iterate over the four paths
-		for (uint8_t lane=0; lane<4; lane++)
-		{									
-			
-			uint8_t current_note = track[track_no][index];
-			
-			//check if at the start of a long note
-			if (current_note == track[track_no][index + 1]>>4) {
-				long_check = 1;
-			
-			//check if in the middle of long note
-			} else if ((long_check) && (track[track_no][index + 1] == current_note)) {
-				continue; 
-			
-			//check if at the end of long note
-			} else if ((long_check) && (track[index + 1] != track[index - 1])) {
-				continue;
-			
-			//else outside long note.
-			} else {
-				long_check = 0;
-			}
-			
-			if (long_check) {
-				current_note = current_note>>4;
-			}
-			
-			//check if there's a note in the specific path
-			if (track[track_no][index] & (1<<lane)) {										//track[index] replaced current_note
-				
-				//check if theres a note in the led matrix section
-				if ((green_check == lane) && ((col >= 11) && (col <= 15))) {
-					//if true set pixels to green
-					ledmatrix_update_pixel(col, 2*lane, COLOUR_GREEN);
-					ledmatrix_update_pixel(col, 2*lane+1, COLOUR_GREEN);
-				
-				} else if (ghost_note != current_note) {					
-					ledmatrix_update_pixel(col, 2*lane, color);
-					ledmatrix_update_pixel(col, 2*lane+1, color);
-										
-				} else {
-					ledmatrix_update_pixel(col, 2*lane, color);
-					ledmatrix_update_pixel(col, 2*lane+1, color);	
-
-				} 
-				
-			}
-		}
-		
-	}
+	draw_notes();
 }
 
 // Returns 1 if the game is over, 0 otherwise.

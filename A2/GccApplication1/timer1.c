@@ -14,7 +14,6 @@
 /* Set up timer 1 For buzzer
  */
 
-
 void init_timer1(void)
 {
 	freq = 1;
